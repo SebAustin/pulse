@@ -32,20 +32,10 @@ export function getTableName(): string {
   return name;
 }
 
-/**
- * TABLE_NAME behaves like a string but resolves lazily via `getTableName()`.
- * The AWS SDK passes it into template expressions (`${TABLE_NAME}`) and object
- * property values — both paths call `toString()` / `valueOf()`, which are
- * intercepted here.
- */
-export const TABLE_NAME: string = (() => {
-  const lazy = {
-    toString(): string { return getTableName(); },
-    valueOf(): string { return getTableName(); },
-    [Symbol.toPrimitive](): string { return getTableName(); },
-  };
-  return lazy as unknown as string;
-})();
+// NOTE: always call `getTableName()` at request time for the `TableName` field.
+// Do NOT export a string-like proxy — the AWS SDK's Smithy schema serializer
+// does not coerce objects via toString()/valueOf(), so a proxy produces an
+// invalid TableName and every command fails with InternalFailure.
 
 // ---------------------------------------------------------------------------
 // Client factory

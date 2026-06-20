@@ -14,7 +14,7 @@
  */
 
 import { BatchGetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { TABLE_NAME, getDocClient } from "./client";
+import { getTableName, getDocClient } from "./client";
 import { counterPrefix, counterShardKey, counterShardSk } from "./keys";
 
 // ---------------------------------------------------------------------------
@@ -96,7 +96,7 @@ export async function readCounterTotal(
 
   const { Items = [] } = await client.send(
     new QueryCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
       ExpressionAttributeValues: {
         ":pk": `EVENT#${eventId}`,
@@ -125,7 +125,7 @@ export async function readMomentTallies(
 
   const { Items = [] } = await client.send(
     new QueryCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
       ExpressionAttributeValues: {
         ":pk": `EVENT#${eventId}`,
@@ -173,12 +173,12 @@ export async function batchReadCounterTotals(
     const { Responses } = await client.send(
       new BatchGetCommand({
         RequestItems: {
-          [TABLE_NAME]: { Keys: batch },
+          [getTableName()]: { Keys: batch },
         },
       })
     );
 
-    const items = (Responses?.[TABLE_NAME] ?? []) as Array<{
+    const items = (Responses?.[getTableName()] ?? []) as Array<{
       sk: string;
       count: number;
     }>;

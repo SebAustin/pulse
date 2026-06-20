@@ -17,7 +17,7 @@ import {
   TransactWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { TransactionCanceledException } from "@aws-sdk/client-dynamodb";
-import { TABLE_NAME, getDocClient } from "./client";
+import { getTableName, getDocClient } from "./client";
 import {
   eventMetaKey,
   codeKey,
@@ -146,8 +146,8 @@ export async function createEvent(params: {
   await client.send(
     new TransactWriteCommand({
       TransactItems: [
-        { Put: { TableName: TABLE_NAME, Item: eventItem } },
-        { Put: { TableName: TABLE_NAME, Item: codeItem } },
+        { Put: { TableName: getTableName(), Item: eventItem } },
+        { Put: { TableName: getTableName(), Item: codeItem } },
       ],
     })
   );
@@ -164,7 +164,7 @@ export async function getEventByCode(code: string): Promise<Event | null> {
   const ck = codeKey(code);
 
   const { Item: codeItem } = await client.send(
-    new GetCommand({ TableName: TABLE_NAME, Key: { pk: ck.pk, sk: ck.sk } })
+    new GetCommand({ TableName: getTableName(), Key: { pk: ck.pk, sk: ck.sk } })
   );
 
   if (!codeItem) return null;
@@ -180,7 +180,7 @@ export async function getEventById(eventId: string): Promise<Event | null> {
   const key = eventMetaKey(eventId);
 
   const { Item } = await client.send(
-    new GetCommand({ TableName: TABLE_NAME, Key: { pk: key.pk, sk: key.sk } })
+    new GetCommand({ TableName: getTableName(), Key: { pk: key.pk, sk: key.sk } })
   );
 
   if (!Item) return null;
@@ -197,7 +197,7 @@ export async function closeEvent(eventId: string): Promise<Event> {
 
   const { Attributes } = await client.send(
     new UpdateCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       Key: { pk: key.pk, sk: key.sk },
       UpdateExpression: "SET #status = :closed, activeMomentId = :null",
       ConditionExpression: "#status = :active",
@@ -234,7 +234,7 @@ export async function registerParticipant(params: {
 
   await client.send(
     new PutCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       Item: {
         pk: key.pk,
         sk: key.sk,
@@ -263,7 +263,7 @@ export async function countParticipants(eventId: string): Promise<number> {
   do {
     const { Count = 0, LastEvaluatedKey } = await client.send(
       new QueryCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
         ExpressionAttributeValues: {
           ":pk": `EVENT#${eventId}`,
@@ -328,14 +328,14 @@ export async function launchMoment(params: {
       TransactItems: [
         {
           Put: {
-            TableName: TABLE_NAME,
+            TableName: getTableName(),
             Item: momentItem,
             ConditionExpression: "attribute_not_exists(pk)",
           },
         },
         {
           Update: {
-            TableName: TABLE_NAME,
+            TableName: getTableName(),
             Key: { pk: eventKey.pk, sk: eventKey.sk },
             UpdateExpression: "SET activeMomentId = :mid",
             ConditionExpression: "#status = :active",
@@ -374,7 +374,7 @@ export async function getMomentById(
   const key = momentKey(eventId, momentId);
 
   const { Item } = await client.send(
-    new GetCommand({ TableName: TABLE_NAME, Key: { pk: key.pk, sk: key.sk } })
+    new GetCommand({ TableName: getTableName(), Key: { pk: key.pk, sk: key.sk } })
   );
 
   if (!Item) return null;
@@ -395,7 +395,7 @@ export async function closeMoment(
 
   const { Attributes } = await client.send(
     new UpdateCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       Key: { pk: key.pk, sk: key.sk },
       UpdateExpression: "SET #status = :closed",
       ConditionExpression: "#status = :active",
@@ -409,7 +409,7 @@ export async function closeMoment(
   await client
     .send(
       new UpdateCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         Key: { pk: eventKey.pk, sk: eventKey.sk },
         UpdateExpression: "SET activeMomentId = :null",
         ConditionExpression: "activeMomentId = :mid",
@@ -434,7 +434,7 @@ export async function countMoments(eventId: string): Promise<number> {
   do {
     const { Count = 0, LastEvaluatedKey } = await client.send(
       new QueryCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
         ExpressionAttributeValues: {
           ":pk": `EVENT#${eventId}`,
@@ -486,7 +486,7 @@ export async function recordVote(params: {
         TransactItems: [
           {
             Put: {
-              TableName: TABLE_NAME,
+              TableName: getTableName(),
               Item: {
                 pk: vk.pk,
                 sk: vk.sk,
@@ -500,7 +500,7 @@ export async function recordVote(params: {
           },
           {
             Update: {
-              TableName: TABLE_NAME,
+              TableName: getTableName(),
               Key: { pk: ck.pk, sk: ck.sk },
               UpdateExpression: "ADD #cnt :one",
               ExpressionAttributeNames: { "#cnt": "count" },
@@ -581,7 +581,7 @@ export async function recordTriviaAnswer(params: {
         TransactItems: [
           {
             Put: {
-              TableName: TABLE_NAME,
+              TableName: getTableName(),
               Item: {
                 pk: vk.pk,
                 sk: vk.sk,
@@ -595,7 +595,7 @@ export async function recordTriviaAnswer(params: {
           },
           {
             Update: {
-              TableName: TABLE_NAME,
+              TableName: getTableName(),
               Key: { pk: ck.pk, sk: ck.sk },
               UpdateExpression: "ADD #cnt :one",
               ExpressionAttributeNames: { "#cnt": "count" },
@@ -616,7 +616,7 @@ export async function recordTriviaAnswer(params: {
       // Get current score for the duplicate response
       const { Item: lbItem } = await client.send(
         new GetCommand({
-          TableName: TABLE_NAME,
+          TableName: getTableName(),
           Key: { pk: lk.pk, sk: lk.sk },
         })
       );
@@ -637,7 +637,7 @@ export async function recordTriviaAnswer(params: {
   // Step 2: ADD score to LB item and get the new cumulative total.
   const { Attributes: lbAttrs } = await client.send(
     new UpdateCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       Key: { pk: lk.pk, sk: lk.sk },
       UpdateExpression:
         "ADD score :pts SET displayName = :dn, gsi2pk = :gsi2pk, #type = :lbtype",
@@ -661,7 +661,7 @@ export async function recordTriviaAnswer(params: {
   await client
     .send(
       new UpdateCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         Key: { pk: lk.pk, sk: lk.sk },
         UpdateExpression: "SET gsi2sk = :newsk",
         ConditionExpression:
@@ -710,7 +710,7 @@ export async function recordReaction(params: {
       TransactItems: [
         {
           Put: {
-            TableName: TABLE_NAME,
+            TableName: getTableName(),
             Item: {
               pk: rk.pk,
               sk: rk.sk,
@@ -723,7 +723,7 @@ export async function recordReaction(params: {
         },
         {
           Update: {
-            TableName: TABLE_NAME,
+            TableName: getTableName(),
             Key: { pk: ck.pk, sk: ck.sk },
             UpdateExpression: "ADD #cnt :one",
             ExpressionAttributeNames: { "#cnt": "count" },
@@ -761,7 +761,7 @@ export async function recordWord(params: {
   try {
     await client.send(
       new PutCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         Item: {
           pk: wk.pk,
           sk: wk.sk,
@@ -803,7 +803,7 @@ export async function getWordCounts(
   do {
     const { Items = [], LastEvaluatedKey } = await client.send(
       new QueryCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
         ExpressionAttributeValues: {
           ":pk": `EVENT#${eventId}`,
@@ -846,7 +846,7 @@ export async function getLeaderboardTopN(
 
   const { Items = [] } = await client.send(
     new QueryCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       IndexName: "GSI2",
       KeyConditionExpression: "gsi2pk = :pk",
       ExpressionAttributeValues: { ":pk": gsi2Pk(eventId) },
@@ -887,7 +887,7 @@ export async function upsertPresence(params: {
 
   await client.send(
     new PutCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       Item: {
         pk: key.pk,
         sk: key.sk,
@@ -914,7 +914,7 @@ export async function countLivePresence(eventId: string): Promise<number> {
   do {
     const { Items = [], LastEvaluatedKey } = await client.send(
       new QueryCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
         ExpressionAttributeValues: {
           ":pk": `EVENT#${eventId}`,
@@ -947,7 +947,7 @@ export async function updatePeakConcurrent(
   await client
     .send(
       new UpdateCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         Key: { pk: key.pk, sk: key.sk },
         UpdateExpression: "SET peakConcurrent = :live",
         ConditionExpression: "peakConcurrent < :live",
@@ -976,7 +976,7 @@ export async function recordOpsWrite(eventId: string): Promise<void> {
 
   await client.send(
     new UpdateCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       Key: { pk: key.pk, sk: key.sk },
       UpdateExpression: "ADD #cnt :one SET #ttl = :ttl, #type = :t",
       ExpressionAttributeNames: {
@@ -1010,7 +1010,7 @@ export async function getOpsStats(eventId: string): Promise<OpsStats> {
 
   const { Items: opsItems = [] } = await client.send(
     new QueryCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
       ExpressionAttributeValues: {
         ":pk": `EVENT#${eventId}`,
@@ -1137,7 +1137,7 @@ export async function getEventSummary(eventId: string): Promise<EventSummary | n
   // Get all moment items
   const { Items: momentItems = [] } = await client.send(
     new QueryCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
       ExpressionAttributeValues: {
         ":pk": `EVENT#${eventId}`,
@@ -1154,7 +1154,7 @@ export async function getEventSummary(eventId: string): Promise<EventSummary | n
   // Total interactions: all counter shards summed (poll votes + reactions + trivia)
   const { Items: counterItems = [] } = await client.send(
     new QueryCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
       ExpressionAttributeValues: {
         ":pk": `EVENT#${eventId}`,
