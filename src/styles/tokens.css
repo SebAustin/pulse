@@ -1,0 +1,260 @@
+/* ============================================================
+   PULSE — DESIGN TOKENS
+   Generated 2026-06-20  ·  Ready to drop into globals.css
+   ============================================================ */
+
+:root {
+
+  /* ----------------------------------------------------------
+     COLOR — HOST CONSOLE (dark surface)
+     All colors defined in OKLCH for perceptual uniformity.
+     Contrast ratios noted against --color-bg-base (L≈0.08).
+     ---------------------------------------------------------- */
+
+  /* Backgrounds */
+  --color-bg-base:          oklch(8% 0.008 270);   /* near-black, faint violet cast */
+  --color-bg-host:          oklch(8% 0.008 270);   /* alias — host console root bg */
+  --color-surface-recessed: oklch(6% 0.006 270);   /* deeper than base, for wells */
+  --color-surface-raised:   oklch(13% 0.010 270);  /* cards, panels */
+  --color-surface-elevated: oklch(18% 0.012 270);  /* hover state, dropdowns */
+
+  /* Borders */
+  --color-border-subtle:    oklch(26% 0.012 270);  /* 1px lines, dividers */
+  --color-border-default:   oklch(34% 0.016 270);  /* input borders, card outlines */
+  --color-border-strong:    oklch(50% 0.020 270);  /* focus rings, active borders */
+
+  /* Text */
+  --color-text-primary:     oklch(96% 0.004 270);  /* main text on dark — contrast ≈16:1 */
+  --color-text-secondary:   oklch(70% 0.008 270);  /* secondary labels — contrast ≈5.5:1 */
+  --color-text-tertiary:    oklch(50% 0.008 270);  /* placeholders, disabled — contrast ≈3:1 */
+  --color-text-inverse:     oklch(10% 0.004 270);  /* text on light surfaces */
+
+  /* Accent — Electric Violet (primary brand color, host console) */
+  --color-accent-primary:   oklch(68% 0.24 290);   /* vivid violet — contrast on dark ≈4.6:1 */
+  --color-accent-primary-hover: oklch(74% 0.22 290);
+  --color-accent-primary-subtle: oklch(20% 0.06 290); /* low-opacity fills */
+
+  /* Accent — Amber (secondary, warnings, polling fallback indicator) */
+  --color-accent-secondary: oklch(80% 0.18 70);    /* amber — contrast on dark ≈7.2:1 */
+  --color-accent-secondary-subtle: oklch(20% 0.05 70);
+
+  /* Accent — Muted Violet (poll bars non-leading, tertiary data) */
+  --color-accent-tertiary:  oklch(44% 0.12 290);
+
+  /* Status colors */
+  --color-status-live:      oklch(80% 0.22 140);   /* neon lime — "live" indicator */
+  --color-status-warning:   oklch(75% 0.18 70);    /* amber */
+  --color-status-error:     oklch(62% 0.22 25);    /* red — contrast on dark ≈4.7:1 */
+  --color-status-success:   oklch(72% 0.18 145);   /* green */
+
+  /* ----------------------------------------------------------
+     COLOR — AUDIENCE SURFACE (light, warm white)
+     These override the host palette for the audience view.
+     Mapped to custom properties prefixed --color-audience-*.
+     ---------------------------------------------------------- */
+
+  --color-bg-audience:         oklch(98% 0.004 80);   /* warm white */
+  --color-surface-audience:    oklch(95% 0.006 80);   /* slightly off-white for cards */
+  --color-border-audience:     oklch(88% 0.010 80);   /* warm gray */
+  --color-text-audience-primary:  oklch(12% 0.006 280); /* near-black */
+  --color-text-audience-secondary: oklch(42% 0.010 280);/* mid gray */
+
+  /* Accent for audience surface — saturated coral/orange, high contrast on white */
+  --color-accent-audience:     oklch(60% 0.22 35);   /* coral — contrast on white ≈4.8:1 */
+  --color-accent-audience-hover: oklch(54% 0.24 35);
+  --color-accent-audience-subtle: oklch(92% 0.05 35);
+
+  /* Trivia timer — used in countdown bar */
+  --color-timer-full:  oklch(72% 0.18 145); /* green */
+  --color-timer-half:  oklch(80% 0.18 70);  /* amber */
+  --color-timer-low:   oklch(62% 0.22 25);  /* red */
+
+  /* ----------------------------------------------------------
+     TYPOGRAPHY
+     Font stack: Display = "Space Grotesk" (geometric, editorial)
+                 Body/UI = "Inter" (high legibility, system UI quality)
+                 Mono = "JetBrains Mono" (OpsReadout, join codes)
+     ---------------------------------------------------------- */
+
+  --font-display: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* Type scale — fluid via clamp(min, preferred, max) */
+  --text-hero:   clamp(3rem, 1.5rem + 6vw, 7rem);    /* 48–112px — landing headline */
+  --text-4xl:    clamp(2.25rem, 1.5rem + 3vw, 3.5rem); /* 36–56px — event title on console */
+  --text-3xl:    clamp(1.875rem, 1.4rem + 2vw, 2.5rem); /* 30–40px — stat numbers */
+  --text-2xl:    clamp(1.5rem, 1.2rem + 1.5vw, 2rem);   /* 24–32px — section heads */
+  --text-xl:     clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem); /* 20–24px */
+  --text-lg:     clamp(1.125rem, 1rem + 0.5vw, 1.25rem);  /* 18–20px */
+  --text-base:   clamp(1rem, 0.92rem + 0.4vw, 1.125rem);  /* 16–18px — body */
+  --text-sm:     0.875rem;   /* 14px — secondary labels, captions */
+  --text-xs:     0.75rem;    /* 12px — OpsReadout mono values, badges */
+
+  /* Line heights */
+  --leading-tight:   1.2;
+  --leading-snug:    1.35;
+  --leading-normal:  1.55;
+  --leading-relaxed: 1.7;
+
+  /* Font weights */
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semibold: 600;
+  --weight-bold:    700;
+
+  /* Letter spacing */
+  --tracking-tight:  -0.02em;
+  --tracking-normal:  0em;
+  --tracking-wide:    0.04em;
+  --tracking-wider:   0.08em;
+  --tracking-widest:  0.12em;  /* used for "LIVE OPS" label */
+
+  /* ----------------------------------------------------------
+     SPACING SCALE (4px base unit)
+     ---------------------------------------------------------- */
+
+  --space-1:   0.25rem;   /*  4px */
+  --space-2:   0.5rem;    /*  8px */
+  --space-3:   0.75rem;   /* 12px */
+  --space-4:   1rem;      /* 16px */
+  --space-5:   1.25rem;   /* 20px */
+  --space-6:   1.5rem;    /* 24px */
+  --space-8:   2rem;      /* 32px */
+  --space-10:  2.5rem;    /* 40px */
+  --space-12:  3rem;      /* 48px */
+  --space-16:  4rem;      /* 64px */
+  --space-20:  5rem;      /* 80px */
+  --space-24:  6rem;      /* 96px */
+
+  /* Section rhythm (fluid) */
+  --space-section:  clamp(3rem, 2rem + 5vw, 8rem);
+  --space-inset-lg: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+
+  /* ----------------------------------------------------------
+     BORDER RADIUS
+     ---------------------------------------------------------- */
+
+  --radius-none: 0;
+  --radius-sm:   0.25rem;  /*  4px — skeleton blocks, small chips */
+  --radius-md:   0.5rem;   /*  8px — input fields, small cards */
+  --radius-lg:   0.875rem; /* 14px — moment type cards, panels */
+  --radius-xl:   1.25rem;  /* 20px — large modals, drawers */
+  --radius-full: 9999px;   /* pills, dots, emoji reaction buttons */
+
+  /* ----------------------------------------------------------
+     ELEVATION / SHADOWS
+     Host console uses glow-based depth (appropriate for dark surfaces).
+     Audience surface uses traditional box shadows.
+     ---------------------------------------------------------- */
+
+  /* Host console (glow shadows — violet tint) */
+  --shadow-sm:    0 1px 3px oklch(0% 0 0 / 0.5), 0 1px 2px oklch(0% 0 0 / 0.4);
+  --shadow-md:    0 4px 12px oklch(0% 0 0 / 0.6), 0 2px 4px oklch(0% 0 0 / 0.4);
+  --shadow-lg:    0 12px 32px oklch(0% 0 0 / 0.7), 0 4px 8px oklch(0% 0 0 / 0.4);
+  --shadow-glow:  0 0 20px oklch(68% 0.24 290 / 0.35); /* accent violet glow */
+  --shadow-glow-sm: 0 0 8px oklch(68% 0.24 290 / 0.25);
+
+  /* Audience surface (warmer, lighter) */
+  --shadow-audience-sm: 0 1px 4px oklch(12% 0 0 / 0.08);
+  --shadow-audience-md: 0 4px 16px oklch(12% 0 0 / 0.10);
+  --shadow-audience-lg: 0 8px 24px oklch(12% 0 0 / 0.12);
+
+  /* ----------------------------------------------------------
+     MOTION / ANIMATION
+     ---------------------------------------------------------- */
+
+  /* Durations */
+  --duration-instant: 50ms;
+  --duration-fast:    100ms;
+  --duration-normal:  220ms;   /* default transitions */
+  --duration-slow:    380ms;   /* word cloud pulse, bar initial fill */
+  --duration-spring:  500ms;   /* leaderboard reorder */
+  --duration-burst:   1200ms;  /* emoji float-up */
+
+  /* Easings */
+  --ease-default:   cubic-bezier(0.4, 0, 0.2, 1);    /* standard material curve */
+  --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);   /* bar fills, slide-in panels */
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1); /* leaderboard reorder */
+  --ease-in-out:    cubic-bezier(0.4, 0, 0.6, 1);    /* symmetric transitions */
+
+  /* ----------------------------------------------------------
+     COMPONENT-SPECIFIC TOKENS
+     ---------------------------------------------------------- */
+
+  /* Poll bars */
+  --poll-bar-height:     8px;
+  --poll-bar-radius:     var(--radius-full);
+  --poll-bar-track-bg:   var(--color-surface-elevated);
+  --poll-bar-fill-lead:  var(--color-accent-primary);
+  --poll-bar-fill-other: var(--color-accent-tertiary);
+
+  /* Connection status dot */
+  --status-dot-size: 8px;
+
+  /* Touch targets */
+  --touch-target-min: 44px;  /* WCAG 2.5.8 — 24px absolute min, 44px recommended */
+  --touch-target-audience: 56px; /* audience view, finger-first */
+
+  /* Focus ring */
+  --focus-ring-width:  2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color:  var(--color-accent-primary); /* host */
+  --focus-ring-color-audience: var(--color-accent-audience); /* audience */
+
+}
+
+/* ----------------------------------------------------------
+   GLOBAL ANIMATION KEYFRAMES
+   ---------------------------------------------------------- */
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes ripple {
+  0%   { box-shadow: 0 0 0 0 currentColor; opacity: 0.8; }
+  100% { box-shadow: 0 0 0 8px currentColor; opacity: 0; }
+}
+
+@keyframes float-up {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  80%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-180px) scale(0.7); }
+}
+
+@keyframes three-dot-1 {
+  0%, 60%, 100% { opacity: 0.2; }
+  20%            { opacity: 1; }
+}
+@keyframes three-dot-2 {
+  0%, 20%, 80%, 100% { opacity: 0.2; }
+  40%                 { opacity: 1; }
+}
+@keyframes three-dot-3 {
+  0%, 40%, 100% { opacity: 0.2; }
+  60%            { opacity: 1; }
+}
+
+@keyframes shard-glow {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* ---------------------------------------------------------- */

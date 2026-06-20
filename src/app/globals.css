@@ -1,26 +1,241 @@
 @import "tailwindcss";
+@import "../styles/tokens.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ----------------------------------------------------------
+   BASE STYLES
+   ---------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  font-weight: var(--weight-regular);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ----------------------------------------------------------
+   FOCUS VISIBILITY
+   ---------------------------------------------------------- */
+
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-sm);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ----------------------------------------------------------
+   SKIP LINK (accessibility)
+   ---------------------------------------------------------- */
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-accent-primary);
+  color: var(--color-text-primary);
+  font-weight: var(--weight-semibold);
+  border-radius: var(--radius-md);
+  z-index: 9999;
+  transition: top var(--duration-fast);
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: var(--space-4);
+}
+
+/* ----------------------------------------------------------
+   SKELETON LOADING
+   ---------------------------------------------------------- */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-elevated) 25%,
+    var(--color-surface-raised) 50%,
+    var(--color-surface-elevated) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* ----------------------------------------------------------
+   AUDIENCE SURFACE OVERRIDES
+   Apply .audience-surface to the root element of audience pages
+   ---------------------------------------------------------- */
+
+.audience-surface {
+  background: var(--color-bg-audience);
+  color: var(--color-text-audience-primary);
+  color-scheme: light;
+}
+
+.audience-surface :focus-visible {
+  outline-color: var(--focus-ring-color-audience);
+}
+
+/* ----------------------------------------------------------
+   UTILITY CLASSES
+   ---------------------------------------------------------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----------------------------------------------------------
+   EMOJI FLOATER (EmojiReactionLayer)
+   ---------------------------------------------------------- */
+
+.emoji-floater {
+  position: absolute;
+  bottom: 0;
+  animation: float-up var(--duration-burst) var(--ease-out-expo) forwards;
+  font-size: 2rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emoji-floater {
+    display: none;
+  }
+}
+
+/* ----------------------------------------------------------
+   CONNECTION STATUS DOT RIPPLE
+   ---------------------------------------------------------- */
+
+.status-dot-live::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  animation: ripple 2s ease-out infinite;
+  color: var(--color-status-live);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot-live::after {
+    display: none;
+  }
+}
+
+/* ----------------------------------------------------------
+   THREE-DOT LOBBY PULSE
+   ---------------------------------------------------------- */
+
+.dot-pulse-1 { animation: three-dot-1 1.2s ease-in-out infinite; }
+.dot-pulse-2 { animation: three-dot-2 1.2s ease-in-out infinite; }
+.dot-pulse-3 { animation: three-dot-3 1.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dot-pulse-1,
+  .dot-pulse-2,
+  .dot-pulse-3 {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* ----------------------------------------------------------
+   POLL BAR — scaleX based, compositor-friendly
+   ---------------------------------------------------------- */
+
+.poll-bar-fill {
+  transform-origin: left;
+  transition: transform var(--duration-normal) var(--ease-out-expo);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poll-bar-fill {
+    transition: none;
+  }
+}
+
+/* ----------------------------------------------------------
+   MOMENT CONFIG DRAWER
+   ---------------------------------------------------------- */
+
+.moment-drawer {
+  animation: slide-up var(--duration-normal) var(--ease-out-expo) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moment-drawer {
+    animation: none;
+  }
+}
+
+/* ----------------------------------------------------------
+   CLOSED EVENT OVERLAY FADE
+   ---------------------------------------------------------- */
+
+.closed-overlay {
+  animation: fade-in var(--duration-normal) var(--ease-in-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .closed-overlay {
+    animation: none;
+  }
+}
+
+/* ----------------------------------------------------------
+   WORD CLOUD WORD ENTRY
+   ---------------------------------------------------------- */
+
+.word-entry {
+  animation: scale-in var(--duration-normal) var(--ease-out-expo) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word-entry {
+    animation: fade-in var(--duration-fast) linear forwards;
+  }
 }

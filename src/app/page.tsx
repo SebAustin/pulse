@@ -1,65 +1,159 @@
-import Image from "next/image";
+import { EventCreateForm } from "@/components/create/EventCreateForm";
+import { JoinForm } from "@/components/join/JoinForm";
 
-export default function Home() {
+/**
+ * Landing page — "/"
+ * DESIGN §3 — broadcast split-screen: create event (left) / join event (right).
+ * Dark control-room aesthetic with scan-line divider.
+ */
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main
+      id="main-content"
+      style={{
+        flex: 1,
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        minHeight: "100vh",
+      }}
+    >
+      {/* Left panel — Create event (host) */}
+      <section
+        aria-labelledby="create-heading"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "clamp(2rem, 8vw, 6rem) clamp(2rem, 5vw, 4rem)",
+          borderRight: "1px solid var(--color-border-subtle)",
+          gap: "var(--space-10)",
+        }}
+      >
+        {/* Hero headline */}
+        <div>
+          <h1
+            id="create-heading"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "var(--text-hero)",
+              fontWeight: "var(--weight-bold)",
+              color: "var(--color-text-primary)",
+              lineHeight: "var(--leading-tight)",
+              letterSpacing: "var(--tracking-tight)",
+              margin: 0,
+            }}
+          >
+            Pulse
+            <span
+              aria-hidden="true"
+              style={{
+                display: "block",
+                width: "3ch",
+                height: "3px",
+                background: "var(--color-accent-primary)",
+                borderRadius: "var(--radius-full)",
+                marginTop: "var(--space-3)",
+              }}
+            />
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p
+            style={{
+              marginTop: "var(--space-4)",
+              color: "var(--color-text-secondary)",
+              fontSize: "var(--text-lg)",
+              lineHeight: "var(--leading-relaxed)",
+              maxWidth: "36ch",
+            }}
+          >
+            Real-time polls, word clouds, emoji bursts, and trivia — built on
+            DynamoDB write-sharded counters for million-scale events.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <div style={{ maxWidth: "420px" }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "var(--text-xl)",
+              fontWeight: "var(--weight-semibold)",
+              color: "var(--color-text-primary)",
+              marginBottom: "var(--space-5)",
+              letterSpacing: "var(--tracking-wide)",
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Host an event
+          </h2>
+          <EventCreateForm />
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Right panel — Join event (audience) */}
+      <section
+        aria-labelledby="join-heading"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "clamp(2rem, 8vw, 6rem) clamp(2rem, 5vw, 4rem)",
+          background: "var(--color-surface-recessed)",
+          gap: "var(--space-8)",
+        }}
+      >
+        <div>
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--text-xs)",
+              color: "var(--color-text-tertiary)",
+              letterSpacing: "var(--tracking-widest)",
+              textTransform: "uppercase",
+              display: "block",
+              marginBottom: "var(--space-3)",
+            }}
+          >
+            Already have a code?
+          </span>
+          <h2
+            id="join-heading"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "var(--text-2xl)",
+              fontWeight: "var(--weight-semibold)",
+              color: "var(--color-text-primary)",
+              lineHeight: "var(--leading-tight)",
+              margin: 0,
+            }}
+          >
+            Join an event
+          </h2>
+        </div>
+
+        {/* Audience-surface card */}
+        <div
+          style={{
+            background: "var(--color-bg-audience)",
+            borderRadius: "var(--radius-xl)",
+            padding: "var(--space-8)",
+            maxWidth: "380px",
+            boxShadow: "var(--shadow-lg)",
+          }}
+        >
+          <JoinForm />
+        </div>
+      </section>
+
+      {/* Mobile layout */}
+      <style>{`
+        @media (max-width: 767px) {
+          main[id="main-content"] {
+            grid-template-columns: 1fr;
+          }
+          main[id="main-content"] > section:first-child {
+            border-right: none;
+            border-bottom: 1px solid var(--color-border-subtle);
+          }
+        }
+      `}</style>
+    </main>
   );
 }
