@@ -12,18 +12,15 @@ import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { ReactionSchema, okResponse, errorResponse } from "@/lib/validation/schemas";
 import { getEventById, getMomentById, recordReaction } from "@/lib/dynamo/repository";
-import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
+import {
+  checkRateLimitKeyed,
+  rateLimitKey,
+  getClientIp,
+  WRITE_LIMIT,
+} from "@/lib/ratelimit";
 import { log } from "@/lib/observability/log";
 
 export async function POST(req: Request): Promise<NextResponse> {
-  const ip = getClientIp(req);
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json(
-      errorResponse("RATE_LIMITED", "Too many requests"),
-      { status: 429 }
-    );
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -42,6 +39,15 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   const { eventId, momentId, participantId, emoji } = parsed.data;
+
+  // F-02 / F-06: IP + eventId scoped rate limit for all reaction writes.
+  const ip = getClientIp(req);
+  if (!checkRateLimitKeyed(rateLimitKey(ip, eventId), WRITE_LIMIT)) {
+    return NextResponse.json(
+      errorResponse("RATE_LIMITED", "Too many requests"),
+      { status: 429 }
+    );
+  }
 
   try {
     const [event, moment] = await Promise.all([

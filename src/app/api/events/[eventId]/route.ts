@@ -11,8 +11,23 @@ import { verifyToken, extractHostToken } from "@/lib/auth/hostToken";
 import { getEventById, closeEvent } from "@/lib/dynamo/repository";
 import { log } from "@/lib/observability/log";
 import { evictCachedSnapshot } from "@/lib/sse/snapshot-cache";
+import type { Event } from "@/lib/dynamo/types";
 
 type Params = { params: Promise<{ eventId: string }> };
+
+/**
+ * Strip host-only fields before returning the event to any public caller.
+ *
+ * F-04: hostTokenHash is only needed server-side for token verification.
+ * Returning it in the public API response is an unnecessary secret-material
+ * exposure — the hash itself is not reversible (128-bit pre-image), but
+ * there is no defence-in-depth reason to broadcast it.
+ */
+function toPublicEvent(event: Event): Omit<Event, "hostTokenHash"> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { hostTokenHash, ...publicFields } = event;
+  return publicFields;
+}
 
 export async function GET(
   _req: Request,
@@ -27,7 +42,8 @@ export async function GET(
         status: 404,
       });
     }
-    return NextResponse.json(okResponse(event));
+    // F-04: strip hostTokenHash from the public response.
+    return NextResponse.json(okResponse(toPublicEvent(event)));
   } catch (err) {
     log.error("getEventById failed", { eventId, errorType: (err as Error).name });
     return NextResponse.json(errorResponse("INTERNAL", "Failed to read event"), {

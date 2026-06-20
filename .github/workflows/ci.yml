@@ -1,0 +1,209 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Cancel in-progress runs for the same branch/PR to avoid redundant work.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # DynamoDB Local settings shared across jobs
+  PULSE_DB_MODE: local
+  PULSE_TABLE_NAME: Pulse
+  DYNAMODB_LOCAL_ENDPOINT: http://localhost:8000
+  AWS_REGION: us-east-1
+  # Dummy credentials — DynamoDB Local accepts any non-empty values
+  AWS_ACCESS_KEY_ID: local
+  AWS_SECRET_ACCESS_KEY: local
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1: Lint, type-check, unit tests, and security scan
+  # ---------------------------------------------------------------------------
+  lint-and-unit:
+    name: Lint / Type-check / Unit tests / Security scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Security audit (npm audit)
+        # Fail on critical vulnerabilities only; warn on high so the build
+        # stays green for transitive dev-dep issues while still surfacing them.
+        run: npm audit --audit-level=critical
+
+  # ---------------------------------------------------------------------------
+  # Job 2: Integration tests against DynamoDB Local (service container)
+  # ---------------------------------------------------------------------------
+  integration:
+    name: Integration tests (DynamoDB Local)
+    runs-on: ubuntu-latest
+
+    services:
+      dynamodb-local:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+        # Health-check: DDB Local returns 400 on bare GET (no auth token).
+        # That 400 means the process is up and listening.
+        options: >-
+          --health-cmd "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000 | grep -q '400'"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create Pulse table on DynamoDB Local
+        run: npm run ddb:init
+
+      - name: Integration tests
+        run: npm run test:integration
+
+  # ---------------------------------------------------------------------------
+  # Job 3: E2E tests (Playwright, Chromium only)
+  #
+  # This job boots Next.js dev server + DynamoDB Local and runs the three
+  # critical-flow specs (SC1, SC2, SC3). E2E tests in CI are susceptible to
+  # timing variance on shared runners. If they turn flaky after a green baseline,
+  # set continue-on-error: true and investigate; do NOT remove the job.
+  # ---------------------------------------------------------------------------
+  e2e:
+    name: E2E tests (Playwright / Chromium)
+    runs-on: ubuntu-latest
+    # Allow the E2E job to fail without blocking merge while we build confidence
+    # in the specs on CI runners. Remove continue-on-error once stable.
+    # NOTE: This is intentional — see PLAN.md §e2e for rationale.
+    continue-on-error: true
+
+    services:
+      dynamodb-local:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+        options: >-
+          --health-cmd "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000 | grep -q '400'"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium browser
+        run: npx playwright install chromium --with-deps
+
+      - name: Create Pulse table on DynamoDB Local
+        run: npm run ddb:init
+
+      - name: Build the Next.js app
+        run: npm run build
+        env:
+          # Build-time env vars (Next.js build reads some of these)
+          PULSE_DB_MODE: local
+          PULSE_TABLE_NAME: Pulse
+          DYNAMODB_LOCAL_ENDPOINT: http://localhost:8000
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: local
+          AWS_SECRET_ACCESS_KEY: local
+
+      - name: Start Next.js in production mode (background)
+        run: |
+          npm start &
+          echo "NEXT_PID=$!" >> "$GITHUB_ENV"
+        env:
+          PORT: 3000
+          PULSE_DB_MODE: local
+          PULSE_TABLE_NAME: Pulse
+          DYNAMODB_LOCAL_ENDPOINT: http://localhost:8000
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: local
+          AWS_SECRET_ACCESS_KEY: local
+          SSE_INTERVAL_MS: "1000"
+          SSE_CACHE_TTL_MS: "500"
+
+      - name: Wait for Next.js to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 | grep -q "200"; then
+              echo "Next.js is ready"
+              exit 0
+            fi
+            echo "Waiting... attempt $i/30"
+            sleep 2
+          done
+          echo "Next.js did not start in time" >&2
+          exit 1
+
+      - name: Run E2E tests
+        run: npm run e2e
+        env:
+          # Playwright uses the already-running server; skip the webServer block
+          PLAYWRIGHT_USE_EXISTING_SERVER: "1"
+          PULSE_DB_MODE: local
+          PULSE_TABLE_NAME: Pulse
+          DYNAMODB_LOCAL_ENDPOINT: http://localhost:8000
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: local
+          AWS_SECRET_ACCESS_KEY: local
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7

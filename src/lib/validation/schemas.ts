@@ -162,6 +162,11 @@ export const VoteSchema = z.object({
   momentId,
   participantId,
   option: z.string().min(1).max(80),
+  // F-03: displayName is optional for MC votes but required for trivia
+  // leaderboard entries.  Validate here so the raw body value is never
+  // trusted — length-bounded and charset-safe via the shared validator.
+  // Routes that do not use displayName simply ignore the parsed field.
+  displayName: displayName.optional(),
 });
 export type VoteRequest = z.infer<typeof VoteSchema>;
 

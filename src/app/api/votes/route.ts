@@ -16,17 +16,15 @@ import {
   recordTriviaAnswer,
 } from "@/lib/dynamo/repository";
 import { computeTriviaScore, isTriviaAnswerTimely } from "@/lib/moment/scoring";
-import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
+import {
+  checkRateLimitKeyed,
+  rateLimitKey,
+  getClientIp,
+  WRITE_LIMIT,
+} from "@/lib/ratelimit";
 import { log } from "@/lib/observability/log";
 
 export async function POST(req: Request): Promise<NextResponse> {
-  const ip = getClientIp(req);
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json(
-      errorResponse("RATE_LIMITED", "Too many requests"),
-      { status: 429 }
-    );
-  }
 
   let body: unknown;
   try {
@@ -45,7 +43,16 @@ export async function POST(req: Request): Promise<NextResponse> {
     );
   }
 
-  const { eventId, momentId, participantId, option } = parsed.data;
+  const { eventId, momentId, participantId, option, displayName } = parsed.data;
+
+  // F-02 / F-06: IP + eventId scoped rate limit for all vote writes.
+  const ip = getClientIp(req);
+  if (!checkRateLimitKeyed(rateLimitKey(ip, eventId), WRITE_LIMIT)) {
+    return NextResponse.json(
+      errorResponse("RATE_LIMITED", "Too many requests"),
+      { status: 429 }
+    );
+  }
   const serverReceiveTs = Date.now();
 
   try {
@@ -110,15 +117,16 @@ export async function POST(req: Request): Promise<NextResponse> {
         isCorrect
       );
 
-      // We need the displayName — try to get it from the request body.
-      // Participants store their display name in sessionStorage; pass it along.
-      const displayName = (body as Record<string, unknown>).displayName as string | undefined ?? "Unknown";
+      // F-03: displayName is now validated through VoteSchema (max 32 chars,
+      // non-empty).  We read it from parsed.data, never from the raw body,
+      // so no attacker-controlled string can bypass the zod validation.
+      const triviaDisplayName = displayName ?? "Unknown";
 
       const result = await recordTriviaAnswer({
         eventId,
         momentId,
         participantId,
-        displayName,
+        displayName: triviaDisplayName,
         option,
         awarded,
       });

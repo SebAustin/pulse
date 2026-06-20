@@ -94,29 +94,45 @@ describe("verifyToken", () => {
 });
 
 describe("extractHostToken", () => {
-  it("reads from x-host-token header", () => {
+  // F-01: token must arrive via header only — not via query param.
+  // This prevents the token leaking through access logs, Referer headers,
+  // or browser history.
+
+  it("reads from x-pulse-host-token header (canonical)", () => {
     const req = new Request("http://localhost/api/test", {
-      headers: { "x-host-token": "my-token-123" },
+      headers: { "x-pulse-host-token": "my-token-123" },
     });
     expect(extractHostToken(req)).toBe("my-token-123");
   });
 
-  it("reads from hostToken query param when header is absent", () => {
-    const req = new Request(
-      "http://localhost/api/test?hostToken=my-token-456"
-    );
-    expect(extractHostToken(req)).toBe("my-token-456");
+  it("reads from x-host-token header (legacy alias)", () => {
+    const req = new Request("http://localhost/api/test", {
+      headers: { "x-host-token": "my-token-legacy" },
+    });
+    expect(extractHostToken(req)).toBe("my-token-legacy");
   });
 
-  it("prefers header over query param", () => {
-    const req = new Request(
-      "http://localhost/api/test?hostToken=from-query",
-      { headers: { "x-host-token": "from-header" } }
-    );
-    expect(extractHostToken(req)).toBe("from-header");
+  it("prefers x-pulse-host-token over x-host-token when both present", () => {
+    const req = new Request("http://localhost/api/test", {
+      headers: {
+        "x-pulse-host-token": "canonical-header",
+        "x-host-token": "legacy-header",
+      },
+    });
+    expect(extractHostToken(req)).toBe("canonical-header");
   });
 
-  it("returns null when neither source is present", () => {
+  it("does NOT read from hostToken query param (F-01: removed to prevent log leakage)", () => {
+    // A query-param token would appear in server/CDN access logs and the
+    // Referer header sent to third-party resources.  This test asserts that
+    // the query param is explicitly ignored.
+    const req = new Request(
+      "http://localhost/api/test?hostToken=query-token"
+    );
+    expect(extractHostToken(req)).toBeNull();
+  });
+
+  it("returns null when neither header is present", () => {
     const req = new Request("http://localhost/api/test");
     expect(extractHostToken(req)).toBeNull();
   });

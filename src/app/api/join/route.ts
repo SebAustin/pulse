@@ -15,19 +15,15 @@ import {
   getEventByCode,
   registerParticipant,
 } from "@/lib/dynamo/repository";
-import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
+import {
+  checkRateLimitKeyed,
+  rateLimitKey,
+  getClientIp,
+  JOIN_LIMIT,
+} from "@/lib/ratelimit";
 import { log } from "@/lib/observability/log";
 
 export async function POST(req: Request): Promise<NextResponse> {
-  // Rate limiting
-  const ip = getClientIp(req);
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json(
-      errorResponse("RATE_LIMITED", "Too many requests — please slow down"),
-      { status: 429 }
-    );
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -46,6 +42,16 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   const { code, displayName } = parsed.data;
+
+  // F-02 / F-06: Rate limit join attempts per IP per join-code.
+  // True Sybil resistance requires account binding; this raises the cost.
+  const ip = getClientIp(req);
+  if (!checkRateLimitKeyed(rateLimitKey(ip, code), JOIN_LIMIT)) {
+    return NextResponse.json(
+      errorResponse("RATE_LIMITED", "Too many join attempts — please slow down"),
+      { status: 429 }
+    );
+  }
 
   try {
     const event = await getEventByCode(code);

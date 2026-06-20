@@ -26,10 +26,12 @@ export default async function SummaryPage({ params }: Props) {
   let fetchError: string | null = null;
 
   try {
-    const res = await fetch(
-      `${baseUrl}/api/summary/${eventId}?hostToken=${encodeURIComponent(hostToken)}`,
-      { cache: "no-store" }
-    );
+    // F-01: host token sent as a request header to avoid query-param leakage
+    // via access logs, Referer, or browser history.
+    const res = await fetch(`${baseUrl}/api/summary/${eventId}`, {
+      cache: "no-store",
+      headers: { "x-pulse-host-token": hostToken },
+    });
 
     if (res.status === 401 || res.status === 403) {
       notFound();

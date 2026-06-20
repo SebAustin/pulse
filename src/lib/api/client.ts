@@ -266,15 +266,20 @@ export async function getLeaderboard(
 
 /**
  * GET /api/events/[eventId]/ops — Live ops stats (host-gated).
- * Sends the host token as a query param (safe since HTTPS).
+ *
+ * Sends the host token via the `x-pulse-host-token` request header rather
+ * than a query parameter.  Query params appear in access logs, browser
+ * history, Referer headers, and analytics — all paths for unintended token
+ * disclosure.  A request header is not replayed by the browser in Referer
+ * and is stripped by CDNs before forwarding unless explicitly allow-listed.
  */
 export async function getOpsStats(
   eventId: string,
   hostToken: string
 ): Promise<ApiResponse<OpsStats>> {
-  return apiFetch<OpsStats>(
-    `/api/events/${eventId}/ops?hostToken=${encodeURIComponent(hostToken)}`
-  );
+  return apiFetch<OpsStats>(`/api/events/${eventId}/ops`, {
+    headers: { "x-pulse-host-token": hostToken },
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -283,14 +288,17 @@ export async function getOpsStats(
 
 /**
  * GET /api/summary/[eventId] — Event analytics summary (host-gated).
+ *
+ * Sends the host token via the `x-pulse-host-token` request header rather
+ * than a query parameter for the same reasons as getOpsStats above.
  */
 export async function getEventSummary(
   eventId: string,
   hostToken: string
 ): Promise<ApiResponse<EventSummary>> {
-  return apiFetch<EventSummary>(
-    `/api/summary/${eventId}?hostToken=${encodeURIComponent(hostToken)}`
-  );
+  return apiFetch<EventSummary>(`/api/summary/${eventId}`, {
+    headers: { "x-pulse-host-token": hostToken },
+  });
 }
 
 // ---------------------------------------------------------------------------

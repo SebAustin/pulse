@@ -11,18 +11,15 @@ import { NextResponse } from "next/server";
 import { WordSchema, okResponse, errorResponse } from "@/lib/validation/schemas";
 import { getEventById, getMomentById, recordWord } from "@/lib/dynamo/repository";
 import { normaliseWord } from "@/lib/moment/wordcloud";
-import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
+import {
+  checkRateLimitKeyed,
+  rateLimitKey,
+  getClientIp,
+  WRITE_LIMIT,
+} from "@/lib/ratelimit";
 import { log } from "@/lib/observability/log";
 
 export async function POST(req: Request): Promise<NextResponse> {
-  const ip = getClientIp(req);
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json(
-      errorResponse("RATE_LIMITED", "Too many requests"),
-      { status: 429 }
-    );
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -41,6 +38,15 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   const { eventId, momentId, participantId, word } = parsed.data;
+
+  // F-02 / F-06: IP + eventId scoped rate limit for all word-cloud writes.
+  const ip = getClientIp(req);
+  if (!checkRateLimitKeyed(rateLimitKey(ip, eventId), WRITE_LIMIT)) {
+    return NextResponse.json(
+      errorResponse("RATE_LIMITED", "Too many requests"),
+      { status: 429 }
+    );
+  }
   const normalisedWord = normaliseWord(word);
 
   if (!normalisedWord) {
