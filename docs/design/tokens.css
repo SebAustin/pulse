@@ -1,0 +1,330 @@
+/* ============================================================
+   PULSE — DESIGN TOKENS  (canonical copy for reference)
+   Builder: copy this block into  src/styles/tokens.css
+   Generated 2026-06-20
+   ============================================================ */
+
+:root {
+
+  /* ----------------------------------------------------------
+     COLOR — HOST CONSOLE (dark surface)
+     All colors defined in OKLCH.
+     Contrast targets noted vs --color-bg-base (L ≈ 8%).
+     ---------------------------------------------------------- */
+
+  /* Backgrounds */
+  --color-bg-base:            oklch(8% 0.008 270);
+  --color-surface-recessed:   oklch(6% 0.006 270);
+  --color-surface-raised:     oklch(13% 0.010 270);
+  --color-surface-elevated:   oklch(18% 0.012 270);
+
+  /* Borders */
+  --color-border-subtle:      oklch(26% 0.012 270);
+  --color-border-default:     oklch(34% 0.016 270);
+  --color-border-strong:      oklch(50% 0.020 270);
+
+  /* Text */
+  --color-text-primary:       oklch(96% 0.004 270);   /* ≈ 16:1 on bg-base */
+  --color-text-secondary:     oklch(70% 0.008 270);   /* ≈ 5.5:1 on bg-base */
+  --color-text-tertiary:      oklch(50% 0.008 270);   /* ≈ 3:1 on bg-base — placeholders only */
+  --color-text-inverse:       oklch(10% 0.004 270);
+
+  /* Accent — Electric Violet */
+  --color-accent-primary:         oklch(68% 0.24 290);   /* ≈ 4.6:1 on bg-base */
+  --color-accent-primary-hover:   oklch(74% 0.22 290);
+  --color-accent-primary-subtle:  oklch(20% 0.06 290);
+
+  /* Accent — Amber */
+  --color-accent-secondary:        oklch(80% 0.18 70);   /* ≈ 7.2:1 on bg-base */
+  --color-accent-secondary-subtle: oklch(20% 0.05 70);
+
+  /* Accent — Muted Violet (non-leading poll bars, tertiary data) */
+  --color-accent-tertiary:    oklch(44% 0.12 290);
+
+  /* Status */
+  --color-status-live:        oklch(80% 0.22 140);    /* neon lime ≈ 7.5:1 */
+  --color-status-warning:     oklch(75% 0.18 70);
+  --color-status-error:       oklch(62% 0.22 25);     /* ≈ 4.7:1 */
+  --color-status-success:     oklch(72% 0.18 145);
+
+  /* ----------------------------------------------------------
+     COLOR — AUDIENCE SURFACE (light)
+     Applied via .audience-surface class scope.
+     ---------------------------------------------------------- */
+
+  --color-bg-audience:              oklch(98% 0.004 80);
+  --color-surface-audience:         oklch(95% 0.006 80);
+  --color-border-audience:          oklch(88% 0.010 80);
+  --color-text-audience-primary:    oklch(12% 0.006 280);   /* ≈ 14:1 on bg-audience */
+  --color-text-audience-secondary:  oklch(42% 0.010 280);   /* ≈ 5.2:1 on bg-audience */
+
+  --color-accent-audience:          oklch(60% 0.22 35);     /* coral ≈ 4.8:1 on bg-audience */
+  --color-accent-audience-hover:    oklch(54% 0.24 35);
+  --color-accent-audience-subtle:   oklch(92% 0.05 35);
+
+  /* Trivia countdown */
+  --color-timer-full:   oklch(72% 0.18 145);
+  --color-timer-half:   oklch(80% 0.18 70);
+  --color-timer-low:    oklch(62% 0.22 25);
+
+  /* ----------------------------------------------------------
+     TYPOGRAPHY
+     ---------------------------------------------------------- */
+
+  --font-display: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  --text-hero:  clamp(3rem, 1.5rem + 6vw, 7rem);
+  --text-4xl:   clamp(2.25rem, 1.5rem + 3vw, 3.5rem);
+  --text-3xl:   clamp(1.875rem, 1.4rem + 2vw, 2.5rem);
+  --text-2xl:   clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+  --text-xl:    clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+  --text-lg:    clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
+  --text-base:  clamp(1rem, 0.92rem + 0.4vw, 1.125rem);
+  --text-sm:    0.875rem;
+  --text-xs:    0.75rem;
+
+  --leading-tight:   1.2;
+  --leading-snug:    1.35;
+  --leading-normal:  1.55;
+  --leading-relaxed: 1.7;
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  --tracking-tight:   -0.02em;
+  --tracking-normal:   0em;
+  --tracking-wide:     0.04em;
+  --tracking-wider:    0.08em;
+  --tracking-widest:   0.12em;
+
+  /* ----------------------------------------------------------
+     SPACING (4px base unit)
+     ---------------------------------------------------------- */
+
+  --space-1:   0.25rem;
+  --space-2:   0.5rem;
+  --space-3:   0.75rem;
+  --space-4:   1rem;
+  --space-5:   1.25rem;
+  --space-6:   1.5rem;
+  --space-8:   2rem;
+  --space-10:  2.5rem;
+  --space-12:  3rem;
+  --space-16:  4rem;
+  --space-20:  5rem;
+  --space-24:  6rem;
+
+  --space-section:  clamp(3rem, 2rem + 5vw, 8rem);
+  --space-inset-lg: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+
+  /* ----------------------------------------------------------
+     BORDER RADIUS
+     ---------------------------------------------------------- */
+
+  --radius-none: 0;
+  --radius-sm:   0.25rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.875rem;
+  --radius-xl:   1.25rem;
+  --radius-full: 9999px;
+
+  /* ----------------------------------------------------------
+     ELEVATION / SHADOWS
+     ---------------------------------------------------------- */
+
+  --shadow-sm:       0 1px 3px oklch(0% 0 0 / 0.5), 0 1px 2px oklch(0% 0 0 / 0.4);
+  --shadow-md:       0 4px 12px oklch(0% 0 0 / 0.6), 0 2px 4px oklch(0% 0 0 / 0.4);
+  --shadow-lg:       0 12px 32px oklch(0% 0 0 / 0.7), 0 4px 8px oklch(0% 0 0 / 0.4);
+  --shadow-glow:     0 0 20px oklch(68% 0.24 290 / 0.35);
+  --shadow-glow-sm:  0 0 8px oklch(68% 0.24 290 / 0.25);
+
+  --shadow-audience-sm: 0 1px 4px oklch(12% 0 0 / 0.08);
+  --shadow-audience-md: 0 4px 16px oklch(12% 0 0 / 0.10);
+  --shadow-audience-lg: 0 8px 24px oklch(12% 0 0 / 0.12);
+
+  /* ----------------------------------------------------------
+     MOTION
+     ---------------------------------------------------------- */
+
+  --duration-instant: 50ms;
+  --duration-fast:    100ms;
+  --duration-normal:  220ms;
+  --duration-slow:    380ms;
+  --duration-spring:  500ms;
+  --duration-burst:   1200ms;
+
+  --ease-default:   cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out:    cubic-bezier(0.4, 0, 0.6, 1);
+
+  /* ----------------------------------------------------------
+     COMPONENT TOKENS
+     ---------------------------------------------------------- */
+
+  --poll-bar-height:     8px;
+  --poll-bar-radius:     var(--radius-full);
+  --poll-bar-track-bg:   var(--color-surface-elevated);
+  --poll-bar-fill-lead:  var(--color-accent-primary);
+  --poll-bar-fill-other: var(--color-accent-tertiary);
+
+  --status-dot-size:        8px;
+  --touch-target-min:       44px;
+  --touch-target-audience:  56px;
+
+  --focus-ring-width:              2px;
+  --focus-ring-offset:             2px;
+  --focus-ring-color:              var(--color-accent-primary);
+  --focus-ring-color-audience:     var(--color-accent-audience);
+
+}
+
+/* ----------------------------------------------------------
+   AUDIENCE SURFACE SCOPE
+   Apply class="audience-surface" to <main> on audience routes.
+   ---------------------------------------------------------- */
+
+.audience-surface {
+  --color-bg-base:         var(--color-bg-audience);
+  --color-surface-raised:  var(--color-surface-audience);
+  --color-border-default:  var(--color-border-audience);
+  --color-text-primary:    var(--color-text-audience-primary);
+  --color-text-secondary:  var(--color-text-audience-secondary);
+  --color-accent-primary:  var(--color-accent-audience);
+  --color-accent-primary-hover:  var(--color-accent-audience-hover);
+  --color-accent-primary-subtle: var(--color-accent-audience-subtle);
+  --focus-ring-color:      var(--focus-ring-color-audience);
+  --poll-bar-fill-lead:    var(--color-accent-audience);
+  --shadow-sm:             var(--shadow-audience-sm);
+  --shadow-md:             var(--shadow-audience-md);
+  background:              var(--color-bg-audience);
+}
+
+/* ----------------------------------------------------------
+   GLOBAL RESETS THAT DEPEND ON TOKENS
+   ---------------------------------------------------------- */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+  background: var(--color-bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-sm);
+}
+
+:focus:not(:focus-visible) { outline: none; }
+
+/* Screen-reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-accent-primary);
+  color: var(--color-text-primary);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-md);
+  z-index: 9999;
+  text-decoration: none;
+  transition: top var(--duration-fast) var(--ease-out-expo);
+}
+.skip-link:focus { top: var(--space-4); }
+
+/* Tabular numbers for all live counters */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-elevated) 25%,
+    var(--color-surface-raised)   50%,
+    var(--color-surface-elevated) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+
+/* Emoji float-up */
+@keyframes float-up {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  80%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-180px) scale(0.7); }
+}
+
+.emoji-floater {
+  position: absolute;
+  bottom: 0;
+  animation: float-up var(--duration-burst) var(--ease-out-expo) forwards;
+  font-size: 2rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emoji-floater { display: none; }
+}
+
+/* Connection status ripple */
+@keyframes ripple {
+  0%   { box-shadow: 0 0 0 0 currentColor; }
+  70%  { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.status-dot {
+  display: inline-block;
+  width: var(--status-dot-size);
+  height: var(--status-dot-size);
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+
+.status-dot--live {
+  color: var(--color-status-live);
+  animation: ripple 2s infinite ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot--live { animation: none; }
+}
