@@ -46,6 +46,56 @@ function run(cmd: string): void {
   execSync(cmd, { cwd: INFRA_DIR, stdio: "inherit" });
 }
 
+/** Run a command and capture stdout; returns null on any failure (non-fatal). */
+function capture(cmd: string): string | null {
+  try {
+    const out = execSync(cmd, { stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
+    return out || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Best-effort AWS account id (via STS) — null if creds/CLI unavailable. */
+function awsAccount(): string | null {
+  return capture("aws sts get-caller-identity --query Account --output text");
+}
+
+/** Resolve the deploy region: explicit env → AWS default → profile → us-east-1. */
+function awsRegion(): string {
+  return (
+    process.env.AWS_REGION ||
+    process.env.AWS_DEFAULT_REGION ||
+    capture("aws configure get region") ||
+    "us-east-1"
+  );
+}
+
+/**
+ * CDK requires a one-time `cdk bootstrap` per account+region. If the bootstrap
+ * SSM parameter is absent, `cdk deploy` fails with a cryptic error — so detect
+ * it up front and print the exact remedy instead.
+ */
+function assertBootstrapped(account: string | null, region: string): void {
+  const version = capture(
+    `aws ssm get-parameter --name /cdk-bootstrap/hnb659fds/version --region ${region} --query Parameter.Value --output text`
+  );
+  if (version) return;
+  console.error(
+    "\n✗ This AWS account/region is not CDK-bootstrapped (one-time setup required).\n"
+  );
+  console.error("  Run this once, then re-run `npm run deploy:infra`:\n");
+  console.error(
+    `    cd infra && npx cdk bootstrap aws://${account ?? "<account-id>"}/${region}\n`
+  );
+  console.error(
+    "  (Bootstrap creates a small CDK staging stack: an S3 bucket + a few IAM roles.)\n"
+  );
+  process.exit(1);
+}
+
 function confirm(question: string): Promise<boolean> {
   return new Promise((resolve) => {
     const rl = readline.createInterface({
@@ -60,13 +110,18 @@ function confirm(question: string): Promise<boolean> {
 }
 
 async function main(): Promise<void> {
+  // Resolve account/region for the banner + bootstrap check (skip AWS calls on dry-run).
+  const account = DRY_RUN ? null : awsAccount();
+  const region = awsRegion();
+
   console.log("=============================================================");
   console.log(" Pulse CDK Deploy");
   console.log("=============================================================");
   console.log(`  Stack:    ${STACK}`);
   console.log(`  Infra:    ${INFRA_DIR}`);
   console.log(`  Table:    ${process.env.PULSE_TABLE_NAME ?? "(not set — will use 'Pulse')"}`);
-  console.log(`  Region:   ${process.env.AWS_REGION ?? "(not set)"}`);
+  console.log(`  Account:  ${account ?? "(dry run / unknown)"}`);
+  console.log(`  Region:   ${region}`);
   console.log(`  Dry run:  ${DRY_RUN}`);
   console.log("=============================================================\n");
 
@@ -83,10 +138,11 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Fail fast with an actionable message if the account/region isn't bootstrapped.
+  assertBootstrapped(account, region);
+
   if (!FORCE) {
-    const ok = await confirm(
-      `Deploy ${STACK} to AWS account ${process.env.AWS_ACCOUNT ?? "(unknown)"}?`
-    );
+    const ok = await confirm(`Deploy ${STACK} to AWS account ${account ?? "(unknown)"}?`);
     if (!ok) {
       console.log("Aborted.");
       process.exit(0);
