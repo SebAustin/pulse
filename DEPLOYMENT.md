@@ -103,8 +103,8 @@ DRY_RUN=true npm run deploy:init-aws
 
 # Pre-set env vars to skip prompts
 AWS_REGION=us-east-1 \
-VERCEL_TEAM_ID=team_xxxxxxxxxxxxxxxxxxxx \
-VERCEL_PROJECT_ID=prj_xxxxxxxxxxxxxxxxxxxx \
+VERCEL_TEAM_SLUG=<your-team-slug> \
+VERCEL_PROJECT_NAME=<your-project-name> \
 PULSE_TABLE_NAME=Pulse \
 npm run deploy:init-aws
 ```
@@ -114,7 +114,7 @@ The script will:
 1. Verify your AWS CLI is authenticated (`aws sts get-caller-identity`).
 2. Print every AWS CLI command before running it.
 3. Prompt for explicit `yes` confirmation before any AWS write.
-4. Create or verify the IAM OIDC provider at `oidc.vercel.com/<team-id>`.
+4. Create or verify the IAM OIDC provider at `oidc.vercel.com/<team-slug>` (the team SLUG, not the team_... ID).
 5. Create or update the IAM role `PulseVercelRole` with the correct trust policy.
 6. Attach the least-privilege inline policy `PulseDynamoDBDataPlane`.
 7. Print the `AWS_ROLE_ARN` to paste into Vercel.
@@ -240,13 +240,15 @@ Nothing provisions until you type `yes`. `DRY_RUN=true` mode exists for both scr
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::<account-id>:oidc-provider/oidc.vercel.com/<team-id>"
+        "Federated": "arn:aws:iam::<account-id>:oidc-provider/oidc.vercel.com/<team-slug>"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "oidc.vercel.com/<team-id>:aud": "https://aws.amazon.com/oidc",
-          "oidc.vercel.com/<team-id>:sub": "owner:<team-id>:project:<project-id>:environment:production"
+          "oidc.vercel.com/<team-slug>:aud": "https://vercel.com/<team-slug>"
+        },
+        "StringLike": {
+          "oidc.vercel.com/<team-slug>:sub": "owner:<team-slug>:project:<project-name>:environment:*"
         }
       }
     }
@@ -445,7 +447,7 @@ aws iam delete-role --role-name PulseVercelRole
 
 # Delete the OIDC provider (replace <team-id> and <account-id>)
 aws iam delete-open-id-connect-provider \
-  --open-id-connect-provider-arn arn:aws:iam::<account-id>:oidc-provider/oidc.vercel.com/<team-id>
+  --open-id-connect-provider-arn arn:aws:iam::<account-id>:oidc-provider/oidc.vercel.com/<team-slug>
 ```
 
 ---
@@ -474,6 +476,13 @@ This screenshot demonstrates the single-table design with two GSIs and PAY_PER_R
 ---
 
 ## 11. Finding your Vercel Team ID and Project ID
+
+> **Two different identifiers — don't mix them up:**
+> - The **Devpost submission** wants your **Team ID** (`team_…`, below).
+> - The **OIDC setup** (`init-aws.sh`) wants your **team SLUG** and **project NAME** — the
+>   readable names in your dashboard URL `vercel.com/<team-slug>/<project-name>` (e.g. team
+>   `acme`, project `pulse`). Vercel's OIDC token is keyed on the slug/name, **not** the
+>   `team_…`/`prj_…` IDs, so the IAM trust policy must use the slug/name.
 
 ### Team ID
 

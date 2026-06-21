@@ -64,7 +64,17 @@ export async function POST(req: Request): Promise<NextResponse> {
     try {
       const event = await createEvent({ eventId, title, code, hostTokenHash });
 
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+      // Derive the public origin from the request so share links are correct in
+      // every environment (Vercel sets x-forwarded-host/proto). NEXT_PUBLIC_BASE_URL
+      // overrides when set; localhost is the local-dev fallback.
+      const fwdHost =
+        req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+      const fwdProto =
+        req.headers.get("x-forwarded-proto") ??
+        (fwdHost && fwdHost.startsWith("localhost") ? "http" : "https");
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_URL ??
+        (fwdHost ? `${fwdProto}://${fwdHost}` : "http://localhost:3000");
       const joinUrl = `${baseUrl}/join/${event.code}`;
       const hostUrl = `${baseUrl}/host/${event.eventId}/${hostToken}`;
 

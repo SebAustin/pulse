@@ -51,3 +51,7 @@ cdk.out/
 
 # session-history scratch (internal tooling)
 .remember/
+
+# generated CDK deploy outputs (contains account-specific ARNs)
+infra/cdk-outputs.json
+cdk-outputs.json

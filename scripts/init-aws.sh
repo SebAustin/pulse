@@ -23,8 +23,8 @@
 #
 # PREREQUISITES:
 #   - AWS CLI v2 installed and configured (`aws sts get-caller-identity` works).
-#   - You know your Vercel Team ID (Settings → General → Team ID in Vercel dashboard).
-#   - You know your Vercel Project ID (Project → Settings → General in Vercel dashboard).
+#   - You know your Vercel Team slug (Settings → General → Team ID in Vercel dashboard).
+#   - You know your Vercel Project name (Project → Settings → General in Vercel dashboard).
 #   - The DynamoDB table does NOT need to exist yet (table is provisioned by deploy-infra.sh).
 #
 # USAGE:
@@ -102,27 +102,29 @@ if [[ -z "${AWS_REGION:-}" ]]; then
 fi
 info "Region: ${AWS_REGION}"
 
-# Vercel Team ID
-if [[ -z "${VERCEL_TEAM_ID:-}" ]]; then
+# Vercel Team SLUG (NOT the team_... ID). Vercel OIDC tokens are issued from
+# oidc.vercel.com/<slug> and the `sub`/`aud` claims use the slug, so the IAM
+# trust policy MUST use the slug, not the team_... ID.
+if [[ -z "${VERCEL_TEAM_SLUG:-}" ]]; then
   echo ""
-  echo "  Your Vercel Team ID is found at:"
-  echo "  Vercel Dashboard -> Settings -> General -> Team ID"
-  echo "  It looks like: team_xxxxxxxxxxxxxxxxxxxxxxxx"
-  read -r -p "Vercel Team ID: " VERCEL_TEAM_ID
+  echo "  Your Vercel Team SLUG is the name in your dashboard URL:"
+  echo "  vercel.com/<team-slug>  (e.g. 'acme' in vercel.com/acme/my-project)"
+  echo "  Use the slug — NOT the team_... ID."
+  read -r -p "Vercel Team slug: " VERCEL_TEAM_SLUG
 fi
-[[ -z "$VERCEL_TEAM_ID" ]] && fatal "VERCEL_TEAM_ID is required."
-info "Vercel Team ID: ${VERCEL_TEAM_ID}"
+[[ -z "$VERCEL_TEAM_SLUG" ]] && fatal "VERCEL_TEAM_SLUG is required."
+info "Vercel Team slug: ${VERCEL_TEAM_SLUG}"
 
-# Vercel Project ID
-if [[ -z "${VERCEL_PROJECT_ID:-}" ]]; then
+# Vercel Project NAME (NOT the prj_... ID). The OIDC `sub` uses the project name.
+if [[ -z "${VERCEL_PROJECT_NAME:-}" ]]; then
   echo ""
-  echo "  Your Vercel Project ID is found at:"
-  echo "  Vercel Dashboard -> [Project] -> Settings -> General -> Project ID"
-  echo "  It looks like: prj_xxxxxxxxxxxxxxxxxxxxxxxx"
-  read -r -p "Vercel Project ID: " VERCEL_PROJECT_ID
+  echo "  Your Vercel Project NAME is the project name in the dashboard URL:"
+  echo "  vercel.com/<team-slug>/<project-name>  (e.g. 'my-project')"
+  echo "  Use the name — NOT the prj_... ID."
+  read -r -p "Vercel Project name: " VERCEL_PROJECT_NAME
 fi
-[[ -z "$VERCEL_PROJECT_ID" ]] && fatal "VERCEL_PROJECT_ID is required."
-info "Vercel Project ID: ${VERCEL_PROJECT_ID}"
+[[ -z "$VERCEL_PROJECT_NAME" ]] && fatal "VERCEL_PROJECT_NAME is required."
+info "Vercel Project name: ${VERCEL_PROJECT_NAME}"
 
 # Table name
 if [[ -z "${PULSE_TABLE_NAME:-}" ]]; then
@@ -132,8 +134,10 @@ fi
 info "Table name: ${PULSE_TABLE_NAME}"
 
 # Derived values
-OIDC_PROVIDER_URL="https://oidc.vercel.com/${VERCEL_TEAM_ID}"
-OIDC_AUDIENCE="https://aws.amazon.com/oidc"
+OIDC_PROVIDER_URL="https://oidc.vercel.com/${VERCEL_TEAM_SLUG}"
+# Vercel's OIDC token audience is https://vercel.com/<team-slug> (verified from a
+# real token's `aud` claim). It is NOT https://aws.amazon.com/oidc.
+OIDC_AUDIENCE="https://vercel.com/${VERCEL_TEAM_SLUG}"
 ROLE_NAME="PulseVercelRole"
 TABLE_ARN="arn:aws:dynamodb:${AWS_REGION}:${AWS_ACCOUNT_ID}:table/${PULSE_TABLE_NAME}"
 TABLE_INDEX_ARN="${TABLE_ARN}/index/*"
@@ -150,8 +154,8 @@ echo "  OIDC audience:    ${OIDC_AUDIENCE}"
 echo "  IAM role name:    ${ROLE_NAME}"
 echo "  Table ARN:        ${TABLE_ARN}"
 echo "  Index ARN:        ${TABLE_INDEX_ARN}"
-echo "  Vercel Team ID:   ${VERCEL_TEAM_ID}"
-echo "  Vercel Project:   ${VERCEL_PROJECT_ID}"
+echo "  Vercel Team slug:   ${VERCEL_TEAM_SLUG}"
+echo "  Vercel Project:   ${VERCEL_PROJECT_NAME}"
 echo "============================================================="
 echo ""
 
@@ -184,13 +188,15 @@ TRUST_POLICY=$(cat <<TRUST_JSON
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::${AWS_ACCOUNT_ID}:oidc-provider/oidc.vercel.com/${VERCEL_TEAM_ID}"
+        "Federated": "arn:aws:iam::${AWS_ACCOUNT_ID}:oidc-provider/oidc.vercel.com/${VERCEL_TEAM_SLUG}"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "oidc.vercel.com/${VERCEL_TEAM_ID}:aud": "${OIDC_AUDIENCE}",
-          "oidc.vercel.com/${VERCEL_TEAM_ID}:sub": "owner:${VERCEL_TEAM_ID}:project:${VERCEL_PROJECT_ID}:environment:production"
+          "oidc.vercel.com/${VERCEL_TEAM_SLUG}:aud": "${OIDC_AUDIENCE}"
+        },
+        "StringLike": {
+          "oidc.vercel.com/${VERCEL_TEAM_SLUG}:sub": "owner:${VERCEL_TEAM_SLUG}:project:${VERCEL_PROJECT_NAME}:environment:*"
         }
       }
     }
@@ -200,7 +206,7 @@ TRUST_JSON
 )
 
 # Check if OIDC provider already exists
-PROVIDER_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:oidc-provider/oidc.vercel.com/${VERCEL_TEAM_ID}"
+PROVIDER_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:oidc-provider/oidc.vercel.com/${VERCEL_TEAM_SLUG}"
 
 if [[ "$DRY_RUN" != "true" ]]; then
   if aws iam get-open-id-connect-provider --open-id-connect-provider-arn "$PROVIDER_ARN" &>/dev/null; then
