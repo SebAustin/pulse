@@ -177,3 +177,29 @@ The following files should be present in the public repo root:
 - [x] `docker-compose.yml` — DynamoDB Local for local development and judge review
 - [x] `infra/cdk/` — CDK stack (confirmation-gated deploy)
 - [x] `test/` — unit + integration + E2E tests
+
+---
+
+## Built with
+
+Paste into the Devpost "Built with" field:
+
+```
+amazon-dynamodb, aws, vercel, next.js, react, typescript, node.js, tailwind-css, aws-cdk, aws-cloudformation, aws-sdk, amazon-iam, oidc, server-sent-events, zod, nanoid, vitest, playwright, github-actions, docker, openai, html, css
+```
+
+| Category | Technologies |
+|---|---|
+| Languages | TypeScript, JavaScript, HTML, CSS |
+| Framework / UI | Next.js 16 (App Router), React 19, Tailwind CSS v4 |
+| Runtime | Node.js |
+| Database | **Amazon DynamoDB** (single-table, GSIs, Streams, TTL, on-demand) |
+| Cloud (AWS) | DynamoDB, IAM (OIDC federation), CloudFormation |
+| Hosting / platform | Vercel (serverless/Fluid functions, SSE) |
+| AWS access | AWS SDK for JavaScript v3, `@vercel/oidc-aws-credentials-provider` |
+| IaC | AWS CDK → CloudFormation |
+| Auth / identity | Vercel OIDC + AWS IAM `AssumeRoleWithWebIdentity` (no stored keys); HMAC `httpOnly` cookies |
+| Real-time | Server-Sent Events (SSE) + polling fallback |
+| Validation / utils | Zod, nanoid |
+| Testing / CI | Vitest, Playwright, GitHub Actions, Docker (DynamoDB Local) |
+| Optional AI | OpenAI API (behind a feature flag) |
