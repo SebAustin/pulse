@@ -43,7 +43,7 @@ Every connected screen updates within ~1–2 seconds. Double-voting is impossibl
 
   We pay a small fan-out read to buy effectively unbounded write throughput — the right trade for a write-heavy live event.
 - **Real-time:** Server-Sent Events stream aggregated snapshots, with automatic polling fallback — a pragmatic path that works on serverless without standing up a socket fleet.
-- **Security by design:** production AWS credentials come from **Vercel OIDC** via `AssumeRoleWithWebIdentity` — **zero stored keys**. Host and participant identities are HMAC-signed `httpOnly` cookies; every input is validated with Zod; CSP + HSTS are set.
+- **Security by design:** production AWS credentials come from **Vercel OIDC** via `AssumeRoleWithWebIdentity` — **zero stored keys**. Identities live in `httpOnly` cookies: the participant cookie is HMAC-signed, and the host capability token is verified server-side against a stored SHA-256 hash (only the hash is ever persisted, never the raw token). Every input is validated with Zod; CSP + HSTS are set.
 - **Ops:** AWS CDK for a gated, one-command provision; GitHub Actions CI; 137 unit + 24 integration + 3 end-to-end tests, plus a 5,000-write load harness.
 
 ## Challenges we ran into
