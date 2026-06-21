@@ -76,8 +76,11 @@ no stored keys**; least-privilege IAM scoped to the one table + its GSIs.
 ## Next (recommended polish — non-blocking; from final review)
 
 - Production startup guard that hard-fails when `PULSE_DB_MODE=aws` and `PULSE_SESSION_SECRET` is unset.
-- Make `seed` idempotent (upsert / fresh code) for repeat local runs.
 - Add a unit test for the middleware reserved-`summary` pass-through branch (currently E2E-covered).
+
+_Resolved 2026-06-21:_ `npm run seed` is now idempotent — it clears any prior demo-event partition
+(and its `CODE#` lookup) before recreating, so repeat local runs no longer fail with
+`ConditionalCheckFailed`. The stable demo URL (`DEMO0001` / `DEMO01`) is preserved.
 
 ---
 

@@ -30,6 +30,13 @@ async function main(): Promise<void> {
   const { generateHostToken, hashToken } = await import(
     "../src/lib/auth/hostToken"
   );
+  const { getDocClient, getTableName } = await import(
+    "../src/lib/dynamo/client"
+  );
+  const { codeKey } = await import("../src/lib/dynamo/keys");
+  const { QueryCommand, BatchWriteCommand, DeleteCommand } = await import(
+    "@aws-sdk/lib-dynamodb"
+  );
 
   console.log("Seeding demo event on DynamoDB Local...");
 
@@ -37,6 +44,41 @@ async function main(): Promise<void> {
   const hostTokenHash = hashToken(hostToken);
   const eventId = "DEMO0001";
   const code = "DEMO01";
+
+  // Idempotency: clear any prior demo event so `npm run seed` can be re-run.
+  // createEvent's CODE# write is conditional (attribute_not_exists), so a stale
+  // demo event from a previous run would otherwise fail with ConditionalCheckFailed.
+  const doc = getDocClient();
+  const table = getTableName();
+  const partitionPk = `EVENT#${eventId}`;
+  const existing = await doc.send(
+    new QueryCommand({
+      TableName: table,
+      KeyConditionExpression: "pk = :pk",
+      ExpressionAttributeValues: { ":pk": partitionPk },
+      ProjectionExpression: "pk, sk",
+    })
+  );
+  const staleItems = (existing.Items ?? []) as Array<{ pk: string; sk: string }>;
+  for (let i = 0; i < staleItems.length; i += 25) {
+    const chunk = staleItems.slice(i, i + 25);
+    await doc.send(
+      new BatchWriteCommand({
+        RequestItems: {
+          [table]: chunk.map((it) => ({
+            DeleteRequest: { Key: { pk: it.pk, sk: it.sk } },
+          })),
+        },
+      })
+    );
+  }
+  const ck = codeKey(code);
+  await doc.send(
+    new DeleteCommand({ TableName: table, Key: { pk: ck.pk, sk: ck.sk } })
+  );
+  if (staleItems.length > 0) {
+    console.log(`Cleared previous demo event (${staleItems.length} items).`);
+  }
 
   // Create event
   const event = await createEvent({
