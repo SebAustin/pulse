@@ -15,7 +15,6 @@
  *   VERCEL_ROLE_ARN  — Vercel OIDC role ARN to grant table access (optional)
  */
 
-import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
 import { PulseStack } from "../pulse-stack";
 
