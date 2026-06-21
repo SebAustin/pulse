@@ -259,6 +259,17 @@ Set as `PULSE_SESSION_SECRET` in **Vercel Dashboard → Settings → Environment
 
 ## 7. Rollback and Teardown
 
+### Destroy everything on AWS (one command)
+
+```bash
+DRY_RUN=true npm run destroy:infra   # preview — no AWS calls
+npm run destroy:infra                # gated: confirms each step (stack, table, IAM/OIDC)
+```
+
+Removes the `PulseStack` CloudFormation stack, the **retained** DynamoDB table (the CDK stack uses
+`RemovalPolicy.RETAIN`, so a plain `cdk destroy` leaves the table behind), and the IAM role +
+Vercel OIDC provider. Each destructive step requires typing `yes`. The manual equivalents are below.
+
 ### Roll back the Vercel deployment
 
 ```bash

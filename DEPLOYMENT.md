@@ -377,6 +377,21 @@ Vercel Node.js functions cold-start in approximately 200–400ms. The DynamoDB c
 
 ## 9. Rollback and teardown
 
+### One-command teardown (recommended)
+
+A gated, idempotent script removes everything this guide provisions on AWS — the CloudFormation
+stack, the **retained** DynamoDB table, and the IAM role + Vercel OIDC provider — each behind its
+own `yes` confirmation:
+
+```bash
+DRY_RUN=true npm run destroy:infra   # preview the plan, makes no AWS calls
+npm run destroy:infra                # interactive: confirms each destructive step
+```
+
+Cost note: DynamoDB PAY_PER_REQUEST has **no idle charge**, and the IAM role / OIDC provider are
+free — leaving them in place costs nothing. Run teardown only to remove resources cleanly. The
+manual equivalents are below.
+
 ### Rollback: redeploy previous version
 
 Vercel maintains a deployment history. To roll back:

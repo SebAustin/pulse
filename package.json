@@ -22,7 +22,8 @@
     "dev:local": "npm run ddb:up && npm run ddb:init && npm run dev",
     "cdk:synth": "cd infra && cdk synth",
     "deploy:init-aws": "bash scripts/init-aws.sh",
-    "deploy:infra": "bash scripts/deploy-infra.sh"
+    "deploy:infra": "bash scripts/deploy-infra.sh",
+    "destroy:infra": "bash scripts/destroy-infra.sh"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.700.0",
