@@ -12,7 +12,7 @@ Score: **92 / 100** · Tests: **137 unit + 24 integration + 3 E2E** · Load test
 
 **[pulse-ochre-six.vercel.app](https://pulse-ochre-six.vercel.app)** — deployed on Vercel, backed by Amazon DynamoDB (us-east-1) via Vercel OIDC (no stored keys). Open it, create an event, and join from your phone with the code.
 
-▶ **Walkthrough:** [`docs/demo/demo.mp4`](docs/demo/demo.mp4) (38 s)
+▶ **Narrated walkthrough (64 s, voiceover):** [`docs/demo/demo-narrated.mp4`](docs/demo/demo-narrated.mp4) · silent 38 s cut: [`docs/demo/demo.mp4`](docs/demo/demo.mp4)
 
 ![Pulse walkthrough](docs/demo/demo.gif)
 
