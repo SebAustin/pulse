@@ -7,7 +7,6 @@ import { config } from "@/lib/config";
 
 type Props = {
   eventId: string;
-  hostToken: string;
   participantCount: number;
   onMomentLaunched: () => void;
 };
@@ -17,8 +16,11 @@ type MomentType = "MC" | "WORDCLOUD" | "REACTION" | "TRIVIA";
 /**
  * MomentLauncher — host console center panel when no moment is active.
  * DESIGN §4.6 / §4.7.
+ *
+ * Token-neutral: the host token is sent automatically via the httpOnly
+ * cookie on same-origin requests (F-01 fix).
  */
-export function MomentLauncher({ eventId, hostToken, participantCount, onMomentLaunched }: Props) {
+export function MomentLauncher({ eventId, participantCount, onMomentLaunched }: Props) {
   const [selected, setSelected] = useState<MomentType | null>(null);
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export function MomentLauncher({ eventId, hostToken, participantCount, onMomentL
 
     setLaunching(true);
     try {
-      const res = await launchMoment(eventId, hostToken, payload);
+      const res = await launchMoment(eventId, payload);
       if (!res.ok) {
         setError(res.error?.message ?? "Failed to launch moment. Try again.");
         return;

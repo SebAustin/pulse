@@ -1,53 +1,75 @@
-import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+/**
+ * /host/[eventId]/summary — Tokenless post-event analytics page (Server Component).
+ *
+ * F-01 fix: reads the host session cookie set by Edge middleware during the
+ * initial magic-link redemption.  The cookie stores the RAW host token;
+ * this page verifies it against the event's hostTokenHash via a direct
+ * repository call — no HTTP self-fetch (defect 4 fix).
+ *
+ * DESIGN §3 — host-token-gated analytics summary.
+ */
+
+import { cookies } from "next/headers";
 import Link from "next/link";
 import type { EventSummary } from "@/lib/dynamo/types";
 import { AnalyticsSummary } from "@/components/host/AnalyticsSummary";
+import { hostSessionCookieName } from "@/lib/auth/hostCookie";
+import { verifyToken } from "@/lib/auth/hostToken";
+import { getEventById, getEventSummary } from "@/lib/dynamo/repository";
 
 type Props = {
-  params: Promise<{ eventId: string; hostToken: string }>;
+  params: Promise<{ eventId: string }>;
 };
 
-/**
- * /host/[eventId]/[hostToken]/summary — Post-event analytics page.
- * DESIGN §3 — server-rendered for instant content paint; analytics component
- * is Client for potential future real-time updates.
- */
-export default async function SummaryPage({ params }: Props) {
-  const { eventId, hostToken } = await params;
+type AuthOutcome =
+  | { status: "unauthorized" }
+  | { status: "error"; message: string }
+  | { status: "ok"; eventTitle: string; summary: EventSummary | null };
 
-  const headerList = await headers();
-  const host = headerList.get("host") ?? "localhost:3000";
-  const proto = process.env.NODE_ENV === "production" ? "https" : "http";
-  const baseUrl = `${proto}://${host}`;
+async function resolveAuth(eventId: string): Promise<AuthOutcome> {
+  // Read the raw host token from the httpOnly cookie.
+  const cookieStore = await cookies();
+  const cookieName = hostSessionCookieName(eventId);
+  const rawToken = cookieStore.get(cookieName)?.value;
 
-  let summary: EventSummary | null = null;
-  let eventTitle = "Event";
-  let fetchError: string | null = null;
+  if (!rawToken) return { status: "unauthorized" };
 
+  // Fetch summary directly from the repository (no HTTP self-fetch).
   try {
-    // F-01: host token sent as a request header to avoid query-param leakage
-    // via access logs, Referer, or browser history.
-    const res = await fetch(`${baseUrl}/api/summary/${eventId}`, {
-      cache: "no-store",
-      headers: { "x-pulse-host-token": hostToken },
-    });
+    const event = await getEventById(eventId);
 
-    if (res.status === 401 || res.status === 403) {
-      notFound();
-    }
+    if (!event) return { status: "unauthorized" };
+    if (!verifyToken(rawToken, event.hostTokenHash)) return { status: "unauthorized" };
 
-    const json = (await res.json()) as { ok: boolean; data?: EventSummary; error?: { message: string } };
-
-    if (json.ok && json.data) {
-      summary = json.data;
-      eventTitle = summary.title;
-    } else {
-      fetchError = json.error?.message ?? "Failed to load summary.";
-    }
-  } catch {
-    fetchError = "Could not reach the server. Make sure the database is running.";
+    const summary = await getEventSummary(eventId);
+    return { status: "ok", eventTitle: event.title, summary };
+  } catch (err) {
+    // Surface real errors rather than swallowing silently.
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Could not reach the database. Make sure it is running.";
+    return { status: "error", message };
   }
+}
+
+export default async function SummaryPage({ params }: Props) {
+  const { eventId } = await params;
+  const auth = await resolveAuth(eventId);
+
+  if (auth.status === "unauthorized") {
+    return <UnauthorizedState />;
+  }
+
+  const fetchError =
+    auth.status === "error"
+      ? auth.message
+      : auth.summary === null
+      ? "Summary not yet available for this event."
+      : null;
+
+  const eventTitle = auth.status === "ok" ? auth.eventTitle : "";
+  const summary = auth.status === "ok" ? auth.summary : null;
 
   return (
     <div
@@ -76,7 +98,7 @@ export default async function SummaryPage({ params }: Props) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
           <Link
-            href={`/host/${eventId}/${hostToken}`}
+            href={`/host/${eventId}`}
             style={{
               fontFamily: "var(--font-display)",
               fontSize: "var(--text-base)",
@@ -111,7 +133,7 @@ export default async function SummaryPage({ params }: Props) {
         </div>
 
         <Link
-          href={`/host/${eventId}/${hostToken}`}
+          href={`/host/${eventId}`}
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "var(--text-xs)",
@@ -187,10 +209,51 @@ export default async function SummaryPage({ params }: Props) {
           <AnalyticsSummary
             summary={summary}
             eventId={eventId}
-            hostToken={hostToken}
           />
         )}
       </main>
+    </div>
+  );
+}
+
+/** Shown when the host session cookie is absent or invalid. */
+function UnauthorizedState() {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--color-bg-host)",
+        color: "var(--color-text-primary)",
+        gap: "var(--space-4)",
+        padding: "var(--space-8)",
+        textAlign: "center",
+      }}
+    >
+      <h1
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: "var(--text-xl)",
+          fontWeight: "var(--weight-semibold)",
+          color: "var(--color-text-primary)",
+          margin: 0,
+        }}
+      >
+        Session expired or not found
+      </h1>
+      <p
+        style={{
+          color: "var(--color-text-secondary)",
+          fontSize: "var(--text-sm)",
+          maxWidth: "40ch",
+          lineHeight: "var(--leading-relaxed)",
+        }}
+      >
+        Please open your host link again to restore your session.
+      </p>
     </div>
   );
 }

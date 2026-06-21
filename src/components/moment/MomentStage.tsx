@@ -12,12 +12,14 @@ type Props = {
   participantId?: string;
   eventId: string;
   onCloseMoment?: () => void;
-  hostToken?: string;
 };
 
 /**
  * MomentStage — presentational switch routing to the correct moment component.
  * PLAN §2, DESIGN §4.
+ *
+ * Token-neutral: host authorization is handled via httpOnly cookie sent
+ * automatically with same-origin API requests — no token prop needed.
  */
 export function MomentStage({
   snapshot,
@@ -25,7 +27,6 @@ export function MomentStage({
   participantId,
   eventId,
   onCloseMoment,
-  hostToken,
 }: Props) {
   const moment = snapshot.activeMoment;
   if (!moment) return null;
@@ -37,7 +38,6 @@ export function MomentStage({
     isHostVariant,
     participantId,
     onClose: onCloseMoment,
-    hostToken,
   };
 
   if (moment.momentType === "MC") {

@@ -15,7 +15,6 @@ type Props = {
   participantId?: string;
   momentStatus: "ACTIVE" | "CLOSED";
   onClose?: () => void;
-  hostToken?: string;
 };
 
 /**

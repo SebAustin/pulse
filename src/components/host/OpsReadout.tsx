@@ -6,16 +6,18 @@ import { config } from "@/lib/config";
 
 type Props = {
   eventId: string;
-  hostToken: string;
 };
 
 /**
  * OpsReadout — prestige component showing live DynamoDB write-sharding behavior.
  * DESIGN §4.5. Polls /api/events/[eventId]/ops every ~1s.
  * Degrades gracefully (shows "—") on fetch failure.
+ *
+ * Token-neutral: the host token is sent automatically via httpOnly cookie on
+ * same-origin requests (F-01 fix).
  */
-export function OpsReadout({ eventId, hostToken }: Props) {
-  const stats = useOpsReadout(eventId, hostToken);
+export function OpsReadout({ eventId }: Props) {
+  const stats = useOpsReadout(eventId);
   const reducedMotion = useReducedMotion();
   const SHARD_COUNT = config.SHARD_COUNT;
 

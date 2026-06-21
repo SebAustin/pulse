@@ -6,12 +6,22 @@
  *   2. No unhandled throttling errors (all dedup 409s are expected, raw errors are not)
  *   3. Prints consumed capacity at debug level
  *
+ * Idempotency fix (defect 3): each invocation uses a unique run ID based on
+ * Date.now() so re-runs create a fresh event+moment and never see stale
+ * duplicate records from previous runs. The event and moment are provisioned
+ * directly in DynamoDB Local at the start of each run.
+ *
  * SC5, NFR-01.1, NFR-05.2.
  * Run with: npm run loadtest
  */
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, TransactWriteCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  TransactWriteCommand,
+  QueryCommand,
+  PutCommand,
+} from "@aws-sdk/lib-dynamodb";
 
 process.env.PULSE_DB_MODE = "local";
 process.env.PULSE_TABLE_NAME = process.env.PULSE_TABLE_NAME ?? "Pulse";
@@ -26,10 +36,13 @@ process.env.OPS_WRITES_TTL_SEC = "60";
 const TABLE = process.env.PULSE_TABLE_NAME;
 const N = parseInt(process.env.LOAD_N ?? "5000", 10);
 const CONCURRENCY = parseInt(process.env.LOAD_CONCURRENCY ?? "100", 10);
-const EVENT_ID = "LOADTEST_EVENT";
-const MOMENT_ID = "LOADTEST_MOMENT";
-const OPTION = "optionA";
 const SHARD_COUNT = 10;
+
+// Unique run ID per invocation — makes the loadtest idempotent across runs.
+const RUN_ID = Date.now().toString(36).toUpperCase();
+const EVENT_ID = `LOADTEST_${RUN_ID}`;
+const MOMENT_ID = `LTMOMENT_${RUN_ID}`;
+const OPTION = "optionA";
 
 const rawClient = new DynamoDBClient({
   endpoint: process.env.DYNAMODB_LOCAL_ENDPOINT,
@@ -47,6 +60,53 @@ function pickShard(participantId: string): number {
     hash = hash >>> 0;
   }
   return hash % SHARD_COUNT;
+}
+
+/**
+ * Provision a minimal EVENT and MOMENT item in DDB Local for this run.
+ * Using PutItem with no condition so we can always create fresh items.
+ */
+async function provisionEventAndMoment(): Promise<void> {
+  const now = Math.floor(Date.now() / 1000);
+
+  // Write event metadata
+  await client.send(
+    new PutCommand({
+      TableName: TABLE,
+      Item: {
+        pk: `EVENT#${EVENT_ID}`,
+        sk: "METADATA",
+        type: "EVENT",
+        eventId: EVENT_ID,
+        title: `Load Test ${RUN_ID}`,
+        code: `LT${RUN_ID.slice(-4)}`,
+        status: "ACTIVE",
+        hostTokenHash: "loadtest-noverify",
+        activeMomentId: MOMENT_ID,
+        peakConcurrent: 0,
+        createdAt: now,
+      },
+    })
+  );
+
+  // Write moment metadata
+  await client.send(
+    new PutCommand({
+      TableName: TABLE,
+      Item: {
+        pk: `EVENT#${EVENT_ID}`,
+        sk: `MOMENT#${MOMENT_ID}`,
+        type: "MOMENT",
+        momentId: MOMENT_ID,
+        momentType: "MC",
+        status: "ACTIVE",
+        question: "Load test question",
+        options: [OPTION, "optionB"],
+        activatedAt: Date.now(),
+        createdAt: now,
+      },
+    })
+  );
 }
 
 async function castVote(participantId: string): Promise<"ok" | "dup" | "error"> {
@@ -130,13 +190,19 @@ async function readTotal(): Promise<number> {
 async function main(): Promise<void> {
   console.log(`\nPulse Load Test`);
   console.log(`  Table:       ${TABLE}`);
+  console.log(`  Run ID:      ${RUN_ID}`);
   console.log(`  Event:       ${EVENT_ID}`);
   console.log(`  Moment:      ${MOMENT_ID}`);
   console.log(`  Votes:       ${N} (unique participants)`);
   console.log(`  Concurrency: ${CONCURRENCY}`);
   console.log(`  Shards:      ${SHARD_COUNT}\n`);
 
-  const participants = Array.from({ length: N }, (_, i) => `u_load_${i}`);
+  // Provision fresh event + moment for this run (idempotency fix)
+  console.log("  Provisioning event + moment...");
+  await provisionEventAndMoment();
+  console.log("  Done.\n");
+
+  const participants = Array.from({ length: N }, (_, i) => `u_load_${RUN_ID}_${i}`);
 
   let ok = 0, dup = 0, error = 0;
   const start = Date.now();

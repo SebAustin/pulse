@@ -5,13 +5,15 @@ import type { EventSummary } from "@/lib/dynamo/types";
 type Props = {
   summary: EventSummary;
   eventId: string;
-  hostToken: string;
 };
 
 /**
  * AnalyticsSummary — post-event analytics display.
  * DESIGN §4.14 — stat cards + word cloud results.
  * Rendered client-side so future real-time re-fetching is easy to add.
+ *
+ * Token-neutral: no host token needed; the summary data is fetched server-side
+ * by the parent Server Component (F-01 fix).
  */
 export function AnalyticsSummary({ summary }: Props) {
   const stats: Array<{ label: string; value: string | number; sub?: string }> = [

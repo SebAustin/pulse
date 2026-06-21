@@ -13,17 +13,22 @@ import Link from "next/link";
 
 type Props = {
   eventId: string;
-  hostToken: string;
   eventTitle: string;
   code: string;
 };
 
 /**
  * HostConsole — three-column control room layout.
- * DESIGN §3 /host/[eventId]/[hostToken] — dark broadcast surface.
+ * DESIGN §3 /host/[eventId] — dark broadcast surface.
+ *
+ * Token-neutral: the host token lives only in the httpOnly cookie set by
+ * Edge middleware during capability-URL redemption (F-01 fix). This component
+ * never receives or handles the raw token — all API calls rely on the cookie
+ * sent automatically by the browser with same-origin requests.
+ *
  * Left rail: ops + stats. Centre: moment control. Right rail: status + actions.
  */
-export function HostConsole({ eventId, hostToken, eventTitle, code }: Props) {
+export function HostConsole({ eventId, eventTitle, code }: Props) {
   const { snapshot, connectionState } = useLiveSnapshot(eventId);
   const [closingEvent, setClosingEvent] = useState(false);
   const [closingMoment, setClosingMoment] = useState(false);
@@ -40,25 +45,25 @@ export function HostConsole({ eventId, hostToken, eventTitle, code }: Props) {
     if (!momentId || closingMoment) return;
     setClosingMoment(true);
     setErrorMsg(null);
-    const res = await closeMoment(eventId, momentId, hostToken);
+    const res = await closeMoment(eventId, momentId);
     setClosingMoment(false);
     if (!res.ok) {
       setErrorMsg(res.error?.message ?? "Failed to close moment.");
     }
-  }, [snapshot?.activeMoment?.momentId, closingMoment, eventId, hostToken]);
+  }, [snapshot?.activeMoment?.momentId, closingMoment, eventId]);
 
   const handleCloseEvent = useCallback(async () => {
     if (closingEvent) return;
     setClosingEvent(true);
     setErrorMsg(null);
-    const res = await closeEvent(eventId, hostToken);
+    const res = await closeEvent(eventId);
     setClosingEvent(false);
     if (!res.ok) {
       setErrorMsg(res.error?.message ?? "Failed to close event.");
     } else {
       setEventClosed(true);
     }
-  }, [closingEvent, eventId, hostToken]);
+  }, [closingEvent, eventId]);
 
   return (
     <div
@@ -165,7 +170,7 @@ export function HostConsole({ eventId, hostToken, eventTitle, code }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-5)", flexShrink: 0 }}>
           <ConnectionStatus state={connectionState} />
           <Link
-            href={`/host/${eventId}/${hostToken}/summary`}
+            href={`/host/${eventId}/summary`}
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: "var(--text-xs)",
@@ -205,7 +210,7 @@ export function HostConsole({ eventId, hostToken, eventTitle, code }: Props) {
             overflowY: "auto",
           }}
         >
-          <OpsReadout eventId={eventId} hostToken={hostToken} />
+          <OpsReadout eventId={eventId} />
 
           {/* Participant count from snapshot */}
           <div
@@ -274,7 +279,7 @@ export function HostConsole({ eventId, hostToken, eventTitle, code }: Props) {
           }}
         >
           {isClosed ? (
-            <ClosedPanel eventId={eventId} hostToken={hostToken} />
+            <ClosedPanel eventId={eventId} />
           ) : !snapshot ? (
             <LoadingPanel />
           ) : hasActiveMoment ? (
@@ -283,12 +288,10 @@ export function HostConsole({ eventId, hostToken, eventTitle, code }: Props) {
               isHostVariant={true}
               eventId={eventId}
               onCloseMoment={handleCloseMoment}
-              hostToken={hostToken}
             />
           ) : (
             <MomentLauncher
               eventId={eventId}
-              hostToken={hostToken}
               participantCount={snapshot.leaderboard.length}
               onMomentLaunched={() => {/* SSE will push snapshot update */}}
             />
@@ -324,7 +327,7 @@ export function HostConsole({ eventId, hostToken, eventTitle, code }: Props) {
                 fontFamily: "var(--font-mono)",
                 fontSize: "var(--text-xs)",
                 color: "var(--color-text-tertiary)",
-                letterSpacing: "var(--tracking-widest)",
+                letterSpacing: "var(--tracking-widests)",
                 textTransform: "uppercase",
                 marginBottom: "var(--space-3)",
               }}
@@ -415,7 +418,7 @@ export function HostConsole({ eventId, hostToken, eventTitle, code }: Props) {
 
           {/* Summary link */}
           <Link
-            href={`/host/${eventId}/${hostToken}/summary`}
+            href={`/host/${eventId}/summary`}
             style={{
               display: "block",
               textAlign: "center",
@@ -470,7 +473,7 @@ function LoadingPanel() {
 }
 
 /** Panel shown after event closes */
-function ClosedPanel({ eventId, hostToken }: { eventId: string; hostToken: string }) {
+function ClosedPanel({ eventId }: { eventId: string }) {
   return (
     <div
       style={{
@@ -517,7 +520,7 @@ function ClosedPanel({ eventId, hostToken }: { eventId: string; hostToken: strin
         This event has ended. View the analytics summary to review results.
       </p>
       <Link
-        href={`/host/${eventId}/${hostToken}/summary`}
+        href={`/host/${eventId}/summary`}
         style={{
           fontFamily: "var(--font-display)",
           fontSize: "var(--text-sm)",

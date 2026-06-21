@@ -127,14 +127,16 @@ export async function getEvent(
 
 /**
  * POST /api/events/[eventId] — Close an event (host-gated).
+ *
+ * The host token is sent via the httpOnly cookie set during capability-URL
+ * redemption (F-01 fix). No token argument needed.
  */
 export async function closeEvent(
-  eventId: string,
-  hostToken: string
+  eventId: string
 ): Promise<ApiResponse<{ status: string }>> {
   return apiFetch<{ status: string }>(`/api/events/${eventId}`, {
     method: "POST",
-    body: JSON.stringify({ action: "close", hostToken }),
+    body: JSON.stringify({ action: "close" }),
   });
 }
 
@@ -173,29 +175,33 @@ export type LaunchMomentPayload =
 
 /**
  * POST /api/events/[eventId]/moments — Launch a moment (host-gated).
+ *
+ * The host token is sent via the httpOnly cookie set during capability-URL
+ * redemption (F-01 fix). No token argument needed.
  */
 export async function launchMoment(
   eventId: string,
-  hostToken: string,
   payload: LaunchMomentPayload
 ): Promise<ApiResponse<LaunchMomentData>> {
   return apiFetch<LaunchMomentData>(`/api/events/${eventId}/moments`, {
     method: "POST",
-    body: JSON.stringify({ ...payload, hostToken }),
+    body: JSON.stringify(payload),
   });
 }
 
 /**
  * POST /api/events/[eventId]/moments/[momentId] — Close a moment (host-gated).
+ *
+ * The host token is sent via the httpOnly cookie set during capability-URL
+ * redemption (F-01 fix). No token argument needed.
  */
 export async function closeMoment(
   eventId: string,
-  momentId: string,
-  hostToken: string
+  momentId: string
 ): Promise<ApiResponse<{ momentId: string; status: string }>> {
   return apiFetch(`/api/events/${eventId}/moments/${momentId}`, {
     method: "POST",
-    body: JSON.stringify({ action: "close", hostToken }),
+    body: JSON.stringify({ action: "close" }),
   });
 }
 
@@ -280,19 +286,14 @@ export async function getLeaderboard(
 /**
  * GET /api/events/[eventId]/ops — Live ops stats (host-gated).
  *
- * Sends the host token via the `x-pulse-host-token` request header rather
- * than a query parameter.  Query params appear in access logs, browser
- * history, Referer headers, and analytics — all paths for unintended token
- * disclosure.  A request header is not replayed by the browser in Referer
- * and is stripped by CDNs before forwarding unless explicitly allow-listed.
+ * The host token is sent automatically via the httpOnly `pulse_host_<eventId>`
+ * cookie set by Edge middleware during capability-URL redemption (F-01 fix).
+ * No token argument needed; the server reads the cookie.
  */
 export async function getOpsStats(
-  eventId: string,
-  hostToken: string
+  eventId: string
 ): Promise<ApiResponse<OpsStats>> {
-  return apiFetch<OpsStats>(`/api/events/${eventId}/ops`, {
-    headers: { "x-pulse-host-token": hostToken },
-  });
+  return apiFetch<OpsStats>(`/api/events/${eventId}/ops`);
 }
 
 // ---------------------------------------------------------------------------
@@ -302,16 +303,14 @@ export async function getOpsStats(
 /**
  * GET /api/summary/[eventId] — Event analytics summary (host-gated).
  *
- * Sends the host token via the `x-pulse-host-token` request header rather
- * than a query parameter for the same reasons as getOpsStats above.
+ * The host token is sent automatically via the httpOnly `pulse_host_<eventId>`
+ * cookie set by Edge middleware during capability-URL redemption (F-01 fix).
+ * No token argument needed; the server reads the cookie.
  */
 export async function getEventSummary(
-  eventId: string,
-  hostToken: string
+  eventId: string
 ): Promise<ApiResponse<EventSummary>> {
-  return apiFetch<EventSummary>(`/api/summary/${eventId}`, {
-    headers: { "x-pulse-host-token": hostToken },
-  });
+  return apiFetch<EventSummary>(`/api/summary/${eventId}`);
 }
 
 // ---------------------------------------------------------------------------

@@ -3,13 +3,15 @@
  *
  * Tokens are 128-bit URL-safe random values (22 characters of base64url).
  * Only the SHA-256 hash is stored in DynamoDB; the raw token lives only in
- * the host URL and is never persisted.
+ * the httpOnly cookie `pulse_host_<eventId>` after the first capability-URL
+ * redemption and is never persisted elsewhere.
  *
  * NFR-03.3: minimum 128-bit entropy.
  * NFR-03.4: verified on every privileged mutation and read.
  */
 
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { hostSessionCookieName } from "./hostCookie";
 
 /**
  * Generate a new host token.
@@ -49,30 +51,12 @@ export function verifyToken(rawToken: string, storedHash: string): boolean {
 /**
  * Extract the host token from an incoming request.
  *
- * For GET /ops and GET /summary the token MUST arrive via the
- * `x-pulse-host-token` request header (or the legacy alias `x-host-token`).
- * Query-param transport is accepted only for POST bodies (close-event,
- * launch/close-moment) where the token travels in the JSON body — those
- * routes never call this helper for query params.
- *
- * Why a header and not a query param?
- *   - Query params appear in server/CDN/proxy access logs, browser history,
- *     analytics beacons, and the HTTP Referer header sent to any third-party
- *     resource loaded on the page.
- *   - A request header is not logged by default and is stripped before
- *     forwarding by well-behaved CDNs unless explicitly allow-listed.
- *
- * Trade-off for the capability URL (/host/[eventId]/[hostToken]):
- *   The host token is still part of the page PATH for the initial console
- *   load — this is the "capability URL" pattern (unguessable link = auth).
- *   We accept that risk for the page URL itself but avoid amplifying it by
- *   broadcasting the token in subsequent XHR query strings.  The /host/*
- *   routes also set Referrer-Policy: no-referrer so the path cannot leak
- *   through the Referer header to any third-party resource.
- *
  * Checks (in order):
  *   1. `x-pulse-host-token` header  (preferred, new canonical name)
  *   2. `x-host-token` header        (legacy alias — kept for backwards compat)
+ *
+ * For cookie-based host session auth (F-01 / post-redemption), use
+ * `extractHostTokenFromCookie(req, eventId)` instead.
  *
  * Returns null if not present.
  */
@@ -81,4 +65,40 @@ export function extractHostToken(req: Request): string | null {
     req.headers.get("x-pulse-host-token") ??
     req.headers.get("x-host-token")
   );
+}
+
+/**
+ * Extract the host token from the httpOnly session cookie set by Edge
+ * middleware during capability-URL redemption (F-01 fix).
+ *
+ * Reads `pulse_host_<eventId>` from the Cookie header and returns the raw
+ * hostToken value stored there — or null if absent/empty.
+ *
+ * There is no HMAC to verify here: the cookie stores the raw token as-is,
+ * and authorization happens separately via `verifyToken(rawToken, event.hostTokenHash)`.
+ * The httpOnly + SameSite=Strict cookie attributes prevent XSS exfiltration
+ * and CSRF, making the raw-value cookie safe for this purpose.
+ *
+ * Used in Node.js Route Handlers and Server Components.
+ * Not for use in Edge middleware (no node:crypto there).
+ *
+ * @param req     - The incoming Next.js request.
+ * @param eventId - The event context; used to form the cookie name so
+ *                  a cookie from event A cannot be used for event B.
+ */
+export function extractHostTokenFromCookie(
+  req: Request,
+  eventId: string
+): string | null {
+  const cookieHeader = req.headers.get("cookie") ?? "";
+  const cookieName = hostSessionCookieName(eventId);
+
+  // Parse the cookie header for the specific cookie name.
+  const match = cookieHeader
+    .split(";")
+    .find((c) => c.trim().startsWith(`${cookieName}=`));
+  if (!match) return null;
+
+  const value = match.trim().slice(cookieName.length + 1).trim();
+  return value || null;
 }

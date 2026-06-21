@@ -5,6 +5,12 @@
  * Runs >= 30 trials and reports p50/p95/max.
  *
  * M3 hard gate: FAILS if measured p95 >= 2000 ms (PLAN §5.4).
+ *
+ * Fix (defect 2): each vote is now authenticated via the httpOnly
+ * `pulse_pt_<eventId>` cookie obtained from /api/join. Previously the probe
+ * sent votes with a bare participantId body field and no cookie, causing 401s
+ * on every attempt and recording zero valid trials.
+ *
  * Run with: npm run latency-probe
  */
 
@@ -24,7 +30,7 @@ const BASE = process.env.PROBE_BASE_URL ?? "http://localhost:3000";
 const TRIALS = parseInt(process.env.PROBE_TRIALS ?? "30", 10);
 const P95_LIMIT_MS = 2000;
 
-/** Wait for the SSE stream to emit a snapshot with the given option count > 0. */
+/** Wait for the SSE stream to emit a snapshot with the given option count >= minCount. */
 async function waitForTally(
   eventId: string,
   momentId: string,
@@ -86,18 +92,64 @@ async function waitForTally(
   });
 }
 
-async function runTrial(
+/**
+ * Join the event and return the Set-Cookie header value so votes can be
+ * authenticated. Each trial participant must have their own unique cookie.
+ */
+async function joinAndGetCookie(
   eventId: string,
-  momentId: string,
-  participantId: string,
-  option: string,
-  expectedCount: number
-): Promise<number> {
-  // Cast vote
-  const res = await fetch(`${BASE}/api/votes`, {
+  code: string,
+  displayName: string
+): Promise<string> {
+  const res = await fetch(`${BASE}/api/join`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ eventId, momentId, participantId, option }),
+    body: JSON.stringify({ code, displayName }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Join failed ${res.status}: ${body}`);
+  }
+
+  // Collect all Set-Cookie headers for the participant cookie.
+  // The httpOnly cookie is set by /api/join as `pulse_pt_<eventId>=...`.
+  const setCookieHeader = res.headers.get("set-cookie");
+  if (!setCookieHeader) {
+    throw new Error(`Join succeeded but no Set-Cookie header returned`);
+  }
+
+  // Extract the pulse_pt_<eventId> cookie name=value pair for use in
+  // subsequent requests' Cookie header.
+  const cookieName = `pulse_pt_${eventId}`;
+  const match = setCookieHeader.match(new RegExp(`(${cookieName}=[^;]+)`));
+  if (!match) {
+    throw new Error(`pulse_pt_${eventId} cookie not found in Set-Cookie: ${setCookieHeader}`);
+  }
+
+  return match[1]; // e.g. "pulse_pt_abc123=<token>.<hmac>"
+}
+
+async function runTrial(
+  eventId: string,
+  code: string,
+  momentId: string,
+  option: string,
+  expectedCount: number,
+  trialIndex: number
+): Promise<number> {
+  // Each trial participant joins fresh to get their own signed cookie.
+  const displayName = `Probe${trialIndex}`;
+  const cookiePair = await joinAndGetCookie(eventId, code, displayName);
+
+  // Cast vote authenticated via the participant cookie.
+  const res = await fetch(`${BASE}/api/votes`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "cookie": cookiePair,
+    },
+    body: JSON.stringify({ eventId, momentId, option }),
   });
 
   if (!res.ok) {
@@ -128,8 +180,10 @@ async function main(): Promise<void> {
     body: JSON.stringify({ title: "Latency Probe Event" }),
   });
   if (!createRes.ok) throw new Error(`Create event failed: ${await createRes.text()}`);
-  const { data: eventData } = await createRes.json() as { data: { eventId: string; hostToken: string } };
-  const { eventId, hostToken } = eventData;
+  const { data: eventData } = await createRes.json() as {
+    data: { eventId: string; hostToken: string; code: string }
+  };
+  const { eventId, hostToken, code } = eventData;
 
   // Launch a poll moment
   const momentRes = await fetch(`${BASE}/api/events/${eventId}/moments`, {
@@ -150,11 +204,10 @@ async function main(): Promise<void> {
   const latencies: number[] = [];
 
   for (let i = 0; i < TRIALS; i++) {
-    const participantId = `u_probe_${i}`;
     const expectedCount = i + 1;
 
     try {
-      const latency = await runTrial(eventId, momentId, participantId, option, expectedCount);
+      const latency = await runTrial(eventId, code, momentId, option, expectedCount, i);
       latencies.push(latency);
       process.stdout.write(
         `  Trial ${i + 1}/${TRIALS}: ${latency}ms\r`

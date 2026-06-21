@@ -25,32 +25,6 @@ import {
 // Shared helpers
 // ---------------------------------------------------------------------------
 
-/** Well-known sessionStorage key for audience identity (from useParticipant.ts). */
-const STORAGE_KEY = "pulse_participant";
-
-interface ParticipantIdentity {
-  participantId: string;
-  displayName: string;
-  eventId: string;
-  code: string;
-  eventTitle: string;
-}
-
-/** Reads the Pulse participant identity from the page's sessionStorage. */
-async function readParticipantIdentity(
-  page: Page
-): Promise<ParticipantIdentity | null> {
-  return page.evaluate((key: string) => {
-    const raw = sessionStorage.getItem(key);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as ParticipantIdentity;
-    } catch {
-      return null;
-    }
-  }, STORAGE_KEY);
-}
-
 interface SeedResult {
   eventId: string;
   hostToken: string;
@@ -122,7 +96,8 @@ test("SC1: full flow — create event (UI), launch MC poll (UI), join (UI), vote
   await page.locator("#event-title").fill("SC1 All Hands");
   await page.locator('button[type="submit"]', { hasText: /Create event/ }).click();
 
-  // Should navigate to the host console
+  // Should navigate to the host console (middleware redeems the magic link and
+  // redirects to the tokenless /host/[eventId] — F-01 fix).
   await page.waitForURL("**/host/**", { timeout: 20_000 });
 
   // Confirm we're on the host console and the console has loaded
@@ -130,8 +105,9 @@ test("SC1: full flow — create event (UI), launch MC poll (UI), join (UI), vote
     timeout: 15_000,
   });
 
-  // Extract eventId and hostToken from URL path: /host/[eventId]/[hostToken]
-  const hostUrlMatch = page.url().match(/\/host\/([^/]+)\/([^/]+)/);
+  // After middleware redemption the URL is tokenless: /host/[eventId]
+  // Extract eventId from the 2-segment URL pattern.
+  const hostUrlMatch = page.url().match(/\/host\/([^/]+?)(?:\/|$)/);
   expect(hostUrlMatch).not.toBeNull();
   const eventId = hostUrlMatch![1];
 
@@ -319,15 +295,14 @@ test("SC3: double-vote prevented — UI blocks second vote; API returns 409", as
   ).not.toBeVisible();
 
   // --- Server-side guard: API returns 409 on second attempt ---
-  // Read the participantId from sessionStorage (stored by useParticipant.ts)
-  const identity = await readParticipantIdentity(audiencePage);
-  expect(identity).not.toBeNull();
-  expect(identity!.participantId).toBeTruthy();
-
-  const dupeRes = await request.post("/api/votes", {
-    data: { eventId, momentId, participantId: identity!.participantId, option: "AWS" },
+  // The duplicate vote must be performed in the SAME cookie context as the
+  // audience page (audiencePage.request). The httpOnly `pulse_pt_<eventId>`
+  // cookie is stored in the audienceCtx cookie jar — a separate `request`
+  // fixture would have no cookie and return 401 instead of 409.
+  const dupeRes = await audiencePage.request.post("/api/votes", {
+    data: { eventId, momentId, option: "AWS" },
   });
-  // HTTP 409 status
+  // HTTP 409 status — server dedup rejects the duplicate
   expect(dupeRes.status()).toBe(409);
   const dupeBody = await dupeRes.json();
   expect((dupeBody.error as { code: string }).code).toBe("DUPLICATE");

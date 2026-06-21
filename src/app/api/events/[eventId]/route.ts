@@ -1,13 +1,18 @@
 /**
  * GET  /api/events/[eventId] — Read event state.
  * POST /api/events/[eventId] — Close event (host-gated).
+ *
+ * Authorization on POST (F-01 fix): reads the host token from the httpOnly
+ * `pulse_host_<eventId>` cookie set by Edge middleware during capability-URL
+ * redemption. Falls back to the `x-pulse-host-token` / `x-host-token` header
+ * for CLI/test callers. The body `hostToken` field is optional fallback.
  */
 
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { CloseEventSchema, okResponse, errorResponse } from "@/lib/validation/schemas";
-import { verifyToken, extractHostToken } from "@/lib/auth/hostToken";
+import { verifyToken, extractHostToken, extractHostTokenFromCookie } from "@/lib/auth/hostToken";
 import { getEventById, closeEvent } from "@/lib/dynamo/repository";
 import { log } from "@/lib/observability/log";
 import { evictCachedSnapshot } from "@/lib/sse/snapshot-cache";
@@ -75,8 +80,13 @@ export async function POST(
     );
   }
 
-  // Authorize host
-  const hostToken = parsed.data.hostToken ?? extractHostToken(req);
+  // Authorization: cookie-first (F-01 fix), then header, then optional body field.
+  const hostToken =
+    extractHostTokenFromCookie(req, eventId) ??
+    extractHostToken(req) ??
+    parsed.data.hostToken ??
+    null;
+
   if (!hostToken) {
     return NextResponse.json(errorResponse("HOST_TOKEN_INVALID", "Host token required"), {
       status: 401,

@@ -65,7 +65,10 @@ export type CreateEventResponse = z.infer<typeof CreateEventResponseSchema>;
 
 export const CloseEventSchema = z.object({
   action: z.literal("close"),
-  hostToken: z.string(),
+  // hostToken in the body is optional — the server prefers the httpOnly
+  // `pulse_host_<eventId>` cookie set by Edge middleware (F-01 fix).
+  // Kept optional for CLI/test callers that still pass it in the body.
+  hostToken: z.string().optional(),
 });
 export type CloseEventRequest = z.infer<typeof CloseEventSchema>;
 
@@ -94,7 +97,10 @@ export type JoinResponse = z.infer<typeof JoinResponseSchema>;
 
 const BaseMomentSchema = z.object({
   eventId,
-  hostToken: z.string(),
+  // hostToken in the body is optional — the server prefers the httpOnly
+  // `pulse_host_<eventId>` cookie set by Edge middleware (F-01 fix).
+  // Kept optional for CLI/test callers that still pass it in the body.
+  hostToken: z.string().optional(),
 });
 
 const McMomentSchema = BaseMomentSchema.extend({
@@ -149,7 +155,10 @@ export type LaunchMomentRequest = z.infer<typeof LaunchMomentSchema>;
 
 export const CloseMomentSchema = z.object({
   action: z.literal("close"),
-  hostToken: z.string(),
+  // hostToken in the body is optional — the server prefers the httpOnly
+  // `pulse_host_<eventId>` cookie set by Edge middleware (F-01 fix).
+  // Kept optional for CLI/test callers that still pass it in the body.
+  hostToken: z.string().optional(),
 });
 export type CloseMomentRequest = z.infer<typeof CloseMomentSchema>;
 

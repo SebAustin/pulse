@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { okResponse, errorResponse } from "@/lib/validation/schemas";
-import { verifyToken, extractHostToken } from "@/lib/auth/hostToken";
+import { verifyToken, extractHostToken, extractHostTokenFromCookie } from "@/lib/auth/hostToken";
 import { getEventById, getEventSummary } from "@/lib/dynamo/repository";
 import { log } from "@/lib/observability/log";
 
@@ -21,7 +21,8 @@ export async function GET(
 ): Promise<NextResponse> {
   const { eventId } = await params;
 
-  const hostToken = extractHostToken(req);
+  // Host token from header (preferred) or httpOnly session cookie (F-01 fix).
+  const hostToken = extractHostToken(req) ?? extractHostTokenFromCookie(req, eventId);
   if (!hostToken) {
     return NextResponse.json(
       errorResponse("HOST_TOKEN_INVALID", "Host token required"),
