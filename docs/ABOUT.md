@@ -29,13 +29,17 @@ Every connected screen updates within ~1–2 seconds. Double-voting is impossibl
   2. an **`ADD`** to a write-sharded counter.
 
   Because they commit atomically, *"you can't double-vote"* and *"the tally is always correct"* aren't two features that can drift apart — they're the **same** guarantee.
-- **Beating the hot partition.** A viral event sends all its writes to one `EVENT#<id>` partition. A single DynamoDB partition sustains roughly $1{,}000$ write units/second, so one shared counter would throttle. We spread each option's counter across $N \ge 10$ shards. With an arrival rate of $\lambda$ writes/second, each shard sees only
+- **Beating the hot partition.** A viral event sends all its writes to one `EVENT#<id>` partition. A single DynamoDB partition sustains roughly **1,000 write units/second**, so one shared counter would throttle. We spread each option's counter across **N ≥ 10** shards. With an arrival rate of **λ** writes/second, each shard sees only:
 
-  $$\lambda_{\text{shard}} \approx \frac{\lambda}{N}.$$
+  $$\lambda_{\text{shard}} \approx \frac{\lambda}{N}$$
 
-  At $\lambda = 5{,}000\ \text{writes/s}$ and $N = 10$, that's $500$ writes/s per shard — comfortably under the ceiling. Reads recombine the shards:
+  *(plain text:* `writes_per_shard ≈ λ / N` *)*
 
-  $$\text{total}(o) = \sum_{i=1}^{N} c_{o,i}.$$
+  At **λ = 5,000 writes/s** and **N = 10**, that's **5000 / 10 = 500 writes/s per shard** — comfortably under the ceiling. Reads recombine the shards by summing them:
+
+  $$\text{total}(o) = \sum_{i=1}^{N} c_{o,i}$$
+
+  *(plain text:* `total(option) = c₁ + c₂ + … + c_N` — the sum of that option's shard counts *)*
 
   We pay a small fan-out read to buy effectively unbounded write throughput — the right trade for a write-heavy live event.
 - **Real-time:** Server-Sent Events stream aggregated snapshots, with automatic polling fallback — a pragmatic path that works on serverless without standing up a socket fleet.
@@ -57,13 +61,13 @@ Almost every bug shared a theme: **"it compiles and the tests are green" is not 
 - **It's genuinely live**, not a mock — create → join → vote → dedup → live tally all verified against real DynamoDB through OIDC, with **no stored credentials**.
 - **The atomic dedup-plus-counter design** that turns two correctness properties into one.
 - **We made the backend part of the UX** — the LIVE OPS readout shows the sharded writes happening, so the database's behavior is something the audience can *see*.
-- **Verified scale + speed:** a 5,000-write burst with **zero lost votes**, and a live-tally **$p_{95} \approx 1.3\,\text{s}$** (under our $2\,\text{s}$ gate).
+- **Verified scale + speed:** a 5,000-write burst with **zero lost votes**, and a live-tally **p95 ≈ 1.3 s** (under our 2 s gate).
 - An independent verifier scored the build **92/100** with **no open critical/high security findings**.
 
 ## What we learned
 
 - **Trust the runtime, not the green checkmark.** Each layer of "passing" hid a defect that only the next-deeper check — real I/O, a real browser, a real production token — could expose. Verification has to exercise the actual path.
-- **DynamoDB rewards intentional modeling.** Single-table design plus write-sharded counters is *how* you scale writes; the read-side $\sum c_i$ is the conscious trade. Naming your access patterns first makes the schema fall out.
+- **DynamoDB rewards intentional modeling.** Single-table design plus write-sharded counters is *how* you scale writes; the read-side sum (`Σ cᵢ`) is the conscious trade. Naming your access patterns first makes the schema fall out.
 - **OIDC federation is exact-match.** The cleanest way to debug "AWS won't authorize" is to decode the real token's claims instead of guessing identifiers.
 - **The best fixes remove moving parts.** Dropping the edge HMAC layer and the CSP nonce both made the system simpler *and* correct.
 
