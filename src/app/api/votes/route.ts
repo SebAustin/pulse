@@ -3,11 +3,17 @@
  *
  * Hero flow: atomic dedup + counter increment in one TransactWriteItems.
  * PLAN §7.1 (MC), §7.3 (trivia), F-02.1.2, F-02.4.2, SC3, SC4.
+ *
+ * Identity: participantId is derived from the signed `pulse_pt_<eventId>`
+ * cookie set at /api/join, NOT from the request body. Any participantId
+ * in the body is ignored for identity purposes. This prevents ballot stuffing
+ * via rotating client-supplied IDs (F-02 / SC-identity).
  */
 
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { VoteSchema, okResponse, errorResponse } from "@/lib/validation/schemas";
 import {
   getEventById,
@@ -23,6 +29,7 @@ import {
   WRITE_LIMIT,
 } from "@/lib/ratelimit";
 import { log } from "@/lib/observability/log";
+import { verifyParticipant, participantCookieName } from "@/lib/auth/participant";
 
 export async function POST(req: Request): Promise<NextResponse> {
 
@@ -43,7 +50,22 @@ export async function POST(req: Request): Promise<NextResponse> {
     );
   }
 
-  const { eventId, momentId, participantId, option, displayName } = parsed.data;
+  // eventId and momentId come from the validated body (not identity fields).
+  const { eventId, momentId, option, displayName } = parsed.data;
+
+  // Derive authoritative participantId from the signed cookie, NOT the body.
+  // A missing or invalid cookie returns 401 — the client must call /api/join first.
+  const cookieStore = await cookies();
+  const cookieName = participantCookieName(eventId);
+  const cookieValue = cookieStore.get(cookieName)?.value;
+  const participantId = verifyParticipant(eventId, cookieValue);
+
+  if (!participantId) {
+    return NextResponse.json(
+      errorResponse("UNAUTHORIZED", "Valid participant session required. Please re-join the event."),
+      { status: 401 }
+    );
+  }
 
   // F-02 / F-06: IP + eventId scoped rate limit for all vote writes.
   const ip = getClientIp(req);

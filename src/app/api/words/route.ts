@@ -3,11 +3,15 @@
  *
  * One submission per participant per moment (server-enforced via conditional Put).
  * F-02.2.2, AP-15.
+ *
+ * Identity: participantId is derived from the signed `pulse_pt_<eventId>`
+ * cookie set at /api/join, NOT from the request body (F-02 / SC-identity).
  */
 
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { WordSchema, okResponse, errorResponse } from "@/lib/validation/schemas";
 import { getEventById, getMomentById, recordWord } from "@/lib/dynamo/repository";
 import { normaliseWord } from "@/lib/moment/wordcloud";
@@ -18,6 +22,7 @@ import {
   WRITE_LIMIT,
 } from "@/lib/ratelimit";
 import { log } from "@/lib/observability/log";
+import { verifyParticipant, participantCookieName } from "@/lib/auth/participant";
 
 export async function POST(req: Request): Promise<NextResponse> {
   let body: unknown;
@@ -37,7 +42,20 @@ export async function POST(req: Request): Promise<NextResponse> {
     );
   }
 
-  const { eventId, momentId, participantId, word } = parsed.data;
+  const { eventId, momentId, word } = parsed.data;
+
+  // Derive authoritative participantId from the signed cookie, NOT the body.
+  const cookieStore = await cookies();
+  const cookieName = participantCookieName(eventId);
+  const cookieValue = cookieStore.get(cookieName)?.value;
+  const participantId = verifyParticipant(eventId, cookieValue);
+
+  if (!participantId) {
+    return NextResponse.json(
+      errorResponse("UNAUTHORIZED", "Valid participant session required. Please re-join the event."),
+      { status: 401 }
+    );
+  }
 
   // F-02 / F-06: IP + eventId scoped rate limit for all word-cloud writes.
   const ip = getClientIp(req);

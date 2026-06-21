@@ -147,7 +147,17 @@ export async function createEvent(params: {
     new TransactWriteCommand({
       TransactItems: [
         { Put: { TableName: getTableName(), Item: eventItem } },
-        { Put: { TableName: getTableName(), Item: codeItem } },
+        {
+          // ConditionExpression ensures uniqueness: if a CODE# item already
+          // exists for this code, the transaction fails with
+          // TransactionCanceledException (ConditionalCheckFailed reason).
+          // The route handler catches this and retries with a new code (FIX-2).
+          Put: {
+            TableName: getTableName(),
+            Item: codeItem,
+            ConditionExpression: "attribute_not_exists(pk)",
+          },
+        },
       ],
     })
   );

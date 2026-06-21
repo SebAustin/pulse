@@ -2,14 +2,20 @@
  * POST /api/join — Join an event by code.
  *
  * Resolves code -> event, issues participantId, registers participant.
+ * Sets an httpOnly signed cookie `pulse_pt_<eventId>` that binds the
+ * participant identity to this specific event. Subsequent writes (votes,
+ * reactions, words) derive participantId from the cookie — never from the
+ * request body — preventing ballot stuffing via rotating client-supplied IDs.
+ *
  * Auth: none (audience endpoint).
- * PLAN §4, F-01.3, F-01.5.
+ * PLAN §4, F-01.3, F-01.5, F-02 / SC-identity.
  */
 
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
+import { cookies } from "next/headers";
 import { JoinSchema, okResponse, errorResponse } from "@/lib/validation/schemas";
 import {
   getEventByCode,
@@ -22,6 +28,7 @@ import {
   JOIN_LIMIT,
 } from "@/lib/ratelimit";
 import { log } from "@/lib/observability/log";
+import { signParticipant, participantCookieName } from "@/lib/auth/participant";
 
 export async function POST(req: Request): Promise<NextResponse> {
   let body: unknown;
@@ -72,10 +79,27 @@ export async function POST(req: Request): Promise<NextResponse> {
     const participantId = `u_${nanoid(12)}`;
     await registerParticipant({ eventId: event.eventId, participantId, displayName });
 
+    // Issue a signed identity cookie bound to this specific event.
+    // httpOnly prevents JS from reading the secret; sameSite=lax prevents
+    // CSRF while still sending the cookie on top-level navigation.
+    // secure=true is enforced in production to prevent cleartext transmission.
+    const cookieName = participantCookieName(event.eventId);
+    const cookieValue = signParticipant(event.eventId, participantId);
+    const isProduction = process.env.NODE_ENV === "production";
+
+    const cookieStore = await cookies();
+    cookieStore.set(cookieName, cookieValue, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: isProduction,
+      maxAge: 60 * 60 * 24, // 24 hours
+    });
+
     return NextResponse.json(
       okResponse({
         eventId: event.eventId,
-        participantId,
+        participantId, // returned for UI display state in sessionStorage; not trusted for writes
         code: event.code,
         title: event.title,
         status: event.status,

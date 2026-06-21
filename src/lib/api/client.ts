@@ -87,7 +87,11 @@ async function apiFetch<T>(
   path: string,
   init?: RequestInit
 ): Promise<ApiResponse<T>> {
+  // credentials: 'same-origin' (the default) is explicit here to ensure
+  // httpOnly participant cookies are sent with same-origin API requests.
+  // Never use 'omit' — that would break cookie-based identity (F-02 / SC-identity).
   const res = await fetch(path, {
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json", ...init?.headers },
     ...init,
   });
@@ -201,11 +205,16 @@ export async function closeMoment(
 
 /**
  * POST /api/votes — Cast an MC or trivia vote.
+ *
+ * The server derives participantId from the httpOnly `pulse_pt_<eventId>`
+ * cookie (set at /api/join). participantId in args is optional and sent for
+ * UI display continuity only — it is NOT trusted by the server for identity
+ * (F-02 / SC-identity). Same-origin fetch sends the cookie automatically.
  */
 export async function castVote(args: {
   eventId: string;
   momentId: string;
-  participantId: string;
+  participantId?: string;
   option: string;
 }): Promise<ApiResponse<VoteData>> {
   return apiFetch<VoteData>("/api/votes", {
@@ -216,11 +225,13 @@ export async function castVote(args: {
 
 /**
  * POST /api/reactions — Submit an emoji reaction.
+ *
+ * participantId is optional; server identity comes from the participant cookie.
  */
 export async function submitReaction(args: {
   eventId: string;
   momentId: string;
-  participantId: string;
+  participantId?: string;
   emoji: string;
 }): Promise<ApiResponse<ReactionData>> {
   return apiFetch<ReactionData>("/api/reactions", {
@@ -231,11 +242,13 @@ export async function submitReaction(args: {
 
 /**
  * POST /api/words — Submit a word cloud response.
+ *
+ * participantId is optional; server identity comes from the participant cookie.
  */
 export async function submitWord(args: {
   eventId: string;
   momentId: string;
-  participantId: string;
+  participantId?: string;
   word: string;
 }): Promise<ApiResponse<WordData>> {
   return apiFetch<WordData>("/api/words", {

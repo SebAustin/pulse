@@ -57,6 +57,19 @@ export const config = {
   // Anthropic
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? "",
   ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5",
+
+  /**
+   * Secret used to HMAC-sign participant cookies (F-02 / SC-identity).
+   *
+   * NON-PRODUCTION DEFAULT: a fixed dev secret is used when the env var is
+   * absent so local development works out of the box without any setup.
+   * PRODUCTION MUST set PULSE_SESSION_SECRET to a strong random value
+   * (32+ bytes of entropy, e.g. `openssl rand -base64 32`).
+   */
+  PULSE_SESSION_SECRET:
+    process.env.PULSE_SESSION_SECRET ??
+    // Fixed dev-only fallback — DO NOT use this value in production.
+    "dev-only-pulse-session-secret-change-in-prod",
 } as const;
 
 export type EmojiPalette = (typeof config.EMOJI_PALETTE)[number];

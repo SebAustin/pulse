@@ -52,9 +52,12 @@ jobs:
         run: npm test
 
       - name: Security audit (npm audit)
-        # Fail on critical vulnerabilities only; warn on high so the build
-        # stays green for transitive dev-dep issues while still surfacing them.
-        run: npm audit --audit-level=critical
+        # Scoped to production dependencies only (--omit=dev) so that dev-only
+        # advisories (e.g. vitest) do not fail the build while still catching
+        # real production critical vulnerabilities. Accepted dev-dep advisories
+        # are documented in SECURITY.md. Do NOT add continue-on-error — the
+        # --omit=dev scoping is the correct fix (FIX SC9).
+        run: npm audit --omit=dev --audit-level=critical
 
   # ---------------------------------------------------------------------------
   # Job 2: Integration tests against DynamoDB Local (service container)

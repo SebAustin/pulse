@@ -160,7 +160,10 @@ export type CloseMomentRequest = z.infer<typeof CloseMomentSchema>;
 export const VoteSchema = z.object({
   eventId,
   momentId,
-  participantId,
+  // participantId in the body is accepted for backwards compatibility but is
+  // IGNORED for identity purposes — the server derives identity from the
+  // signed `pulse_pt_<eventId>` cookie (F-02 / SC-identity).
+  participantId: participantId.optional(),
   option: z.string().min(1).max(80),
   // F-03: displayName is optional for MC votes but required for trivia
   // leaderboard entries.  Validate here so the raw body value is never
@@ -173,7 +176,9 @@ export type VoteRequest = z.infer<typeof VoteSchema>;
 export const ReactionSchema = z.object({
   eventId,
   momentId,
-  participantId,
+  // participantId in the body is ignored for identity; cookie is authoritative
+  // (F-02 / SC-identity).
+  participantId: participantId.optional(),
   emoji: z.string().refine(
     (e) => (config.EMOJI_PALETTE as readonly string[]).includes(e),
     { message: "emoji must be one of the allowed palette" }
@@ -184,7 +189,9 @@ export type ReactionRequest = z.infer<typeof ReactionSchema>;
 export const WordSchema = z.object({
   eventId,
   momentId,
-  participantId,
+  // participantId in the body is ignored for identity; cookie is authoritative
+  // (F-02 / SC-identity).
+  participantId: participantId.optional(),
   word: z
     .string()
     .trim()

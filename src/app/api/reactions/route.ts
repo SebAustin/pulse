@@ -4,12 +4,16 @@
  * Reactions are unlimited per audience member (F-02.3.2).
  * Writes an ephemeral REACTION# item + increments a durable counter shard.
  * F-02.3, AP-13.
+ *
+ * Identity: participantId is derived from the signed `pulse_pt_<eventId>`
+ * cookie set at /api/join, NOT from the request body (F-02 / SC-identity).
  */
 
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
+import { cookies } from "next/headers";
 import { ReactionSchema, okResponse, errorResponse } from "@/lib/validation/schemas";
 import { getEventById, getMomentById, recordReaction } from "@/lib/dynamo/repository";
 import {
@@ -19,6 +23,7 @@ import {
   WRITE_LIMIT,
 } from "@/lib/ratelimit";
 import { log } from "@/lib/observability/log";
+import { verifyParticipant, participantCookieName } from "@/lib/auth/participant";
 
 export async function POST(req: Request): Promise<NextResponse> {
   let body: unknown;
@@ -38,7 +43,20 @@ export async function POST(req: Request): Promise<NextResponse> {
     );
   }
 
-  const { eventId, momentId, participantId, emoji } = parsed.data;
+  const { eventId, momentId, emoji } = parsed.data;
+
+  // Derive authoritative participantId from the signed cookie, NOT the body.
+  const cookieStore = await cookies();
+  const cookieName = participantCookieName(eventId);
+  const cookieValue = cookieStore.get(cookieName)?.value;
+  const participantId = verifyParticipant(eventId, cookieValue);
+
+  if (!participantId) {
+    return NextResponse.json(
+      errorResponse("UNAUTHORIZED", "Valid participant session required. Please re-join the event."),
+      { status: 401 }
+    );
+  }
 
   // F-02 / F-06: IP + eventId scoped rate limit for all reaction writes.
   const ip = getClientIp(req);
