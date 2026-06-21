@@ -85,14 +85,19 @@ export async function POST(req: Request): Promise<NextResponse> {
     // secure=true is enforced in production to prevent cleartext transmission.
     const cookieName = participantCookieName(event.eventId);
     const cookieValue = signParticipant(event.eventId, participantId);
-    const isProduction = process.env.NODE_ENV === "production";
+    // `Secure` tracks the actual request scheme, not NODE_ENV: a prod build over
+    // plain HTTP (local `npm start` / CI e2e) must not set a Secure cookie the
+    // browser drops. Vercel serves HTTPS (x-forwarded-proto=https) so it is Secure there.
+    const isHttps =
+      req.headers.get("x-forwarded-proto") === "https" ||
+      req.url.startsWith("https:");
 
     const cookieStore = await cookies();
     cookieStore.set(cookieName, cookieValue, {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
-      secure: isProduction,
+      secure: isHttps,
       maxAge: 60 * 60 * 24, // 24 hours
     });
 

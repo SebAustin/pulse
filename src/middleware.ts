@@ -65,6 +65,15 @@ export function middleware(req: NextRequest): NextResponse {
     return NextResponse.next();
   }
 
+  // RESERVED SUB-PATHS: the tokenless console links to /host/<eventId>/summary.
+  // The matcher also matches that path (treating "summary" as the hostToken),
+  // so without this guard a prefetch/visit of the summary link would REDEEM
+  // "summary" as a token and clobber the real pulse_host cookie -> 401s.
+  // A real host token is a 22-char nanoid, never the literal "summary".
+  if (hostToken === "summary") {
+    return NextResponse.next();
+  }
+
   // Determine the tokenless redirect target, preserving any sub-path after the token.
   // e.g. /host/abc/TOKEN/summary  →  /host/abc/summary
   const subPath = segments.slice(4).join("/");
@@ -80,6 +89,14 @@ export function middleware(req: NextRequest): NextResponse {
 
   const response = NextResponse.redirect(redirectUrl, 307);
 
+  // `Secure` must track the ACTUAL request scheme, not NODE_ENV: a production
+  // build served over plain HTTP (local `npm start`, CI e2e) would otherwise set
+  // a Secure cookie the browser silently drops, breaking host auth. On real
+  // HTTPS deploys (Vercel sets x-forwarded-proto=https) the cookie is Secure.
+  const isHttps =
+    req.nextUrl.protocol === "https:" ||
+    req.headers.get("x-forwarded-proto") === "https";
+
   // Set the httpOnly session cookie with the RAW token value.
   // - httpOnly: not accessible from JS, preventing XSS exfiltration.
   // - SameSite=Strict: not sent on cross-site navigations.
@@ -93,7 +110,7 @@ export function middleware(req: NextRequest): NextResponse {
   response.cookies.set(cookieName, hostToken, {
     httpOnly: true,
     sameSite: "strict",
-    secure: process.env.NODE_ENV === "production",
+    secure: isHttps,
     path: "/",
     // No explicit maxAge — session cookie; expires when browser is closed.
   });

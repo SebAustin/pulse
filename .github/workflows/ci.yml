@@ -109,10 +109,9 @@ jobs:
   e2e:
     name: E2E tests (Playwright / Chromium)
     runs-on: ubuntu-latest
-    # Allow the E2E job to fail without blocking merge while we build confidence
-    # in the specs on CI runners. Remove continue-on-error once stable.
-    # NOTE: This is intentional — see PLAN.md §e2e for rationale.
-    continue-on-error: true
+    # E2E runs against the production build (`npm start`) and is a real gate —
+    # it must pass. (The host/participant cookies key Secure on the request
+    # scheme, so they work over CI's plain-HTTP prod server.)
 
     services:
       dynamodb-local:
