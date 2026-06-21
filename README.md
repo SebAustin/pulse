@@ -12,6 +12,10 @@ Score: **92 / 100** · Tests: **137 unit + 24 integration + 3 E2E** · Load test
 
 **[pulse-ochre-six.vercel.app](https://pulse-ochre-six.vercel.app)** — deployed on Vercel, backed by Amazon DynamoDB (us-east-1) via Vercel OIDC (no stored keys). Open it, create an event, and join from your phone with the code.
 
+▶ **Walkthrough:** [`docs/demo/demo.mp4`](docs/demo/demo.mp4) (38 s)
+
+![Pulse walkthrough](docs/demo/demo.gif)
+
 ![Pulse host console — live poll with write-sharded DynamoDB counters](docs/demo/02-host-console.png)
 <sub>Host control room: a live poll tallying in real time, with the **LIVE OPS** panel exposing the DynamoDB write-sharding (10 shards) and participant/SSE counts — the database, made visible.</sub>
 
