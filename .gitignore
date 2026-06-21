@@ -48,3 +48,6 @@ cdk.out/
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# session-history scratch (internal tooling)
+.remember/
