@@ -20,15 +20,17 @@ process.env.PRESENCE_TTL_SEC = "15";
 process.env.OPS_WRITES_TTL_SEC = "60";
 process.env.OPS_WINDOW_SEC = "5";
 
-// We import after env setup so the singleton picks up the right config
-const { createEvent, launchMoment, registerParticipant } = await import(
-  "../src/lib/dynamo/repository.js"
-);
-const { generateHostToken, hashToken } = await import(
-  "../src/lib/auth/hostToken.js"
-);
-
 async function main(): Promise<void> {
+  // Import after env setup (above) so the client singleton picks up the right
+  // config. Dynamic imports live inside main() because this is a CJS script —
+  // top-level await is not supported by the tsx/esbuild CJS transform.
+  const { createEvent, launchMoment, registerParticipant } = await import(
+    "../src/lib/dynamo/repository"
+  );
+  const { generateHostToken, hashToken } = await import(
+    "../src/lib/auth/hostToken"
+  );
+
   console.log("Seeding demo event on DynamoDB Local...");
 
   const hostToken = generateHostToken();
