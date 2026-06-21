@@ -84,14 +84,22 @@ _Resolved 2026-06-21:_ `npm run seed` is now idempotent — it clears any prior 
 
 ---
 
-## Submission readiness (user actions to finish the Devpost entry)
+## Deployment — LIVE ✅ (2026-06-21)
 
-Everything below is prepared; these require the user's own accounts/credentials:
+Deployed and verified end-to-end in production:
 
-1. **Deploy** — run the gated rollout in `DEPLOYMENT.md`: `npm run deploy:init-aws` (OIDC role),
-   `npm run deploy:infra` (DynamoDB table), then deploy the app to Vercel.
-2. **Capture artifacts** (checklist in `docs/SUBMISSION.md`): published Vercel Project URL,
-   Vercel Team ID, Storage Configuration screenshot, the architecture diagram
-   (`docs/architecture-diagram.svg` → export PNG).
-3. **Record the <3-min demo** following `docs/DEMO_SCRIPT.md`; upload to YouTube.
-4. **Submit** the Devpost text from `docs/SUBMISSION.md` (DB used: Amazon DynamoDB).
+- **Live URL:** https://pulse-ochre-six.vercel.app (Vercel) · **DynamoDB** table `Pulse`, us-east-1.
+- **Auth to AWS:** Vercel OIDC → `AssumeRoleWithWebIdentity` (no stored keys), trust scoped to the
+  team slug / project name.
+- **Verified live (real DynamoDB):** create event → join by code (mobile) → vote (200) →
+  duplicate vote rejected (409) → live tally updates. Share links use the real domain.
+- Live screenshots in `docs/demo/`.
+
+## Submission readiness (remaining user actions)
+
+1. **Export the architecture diagram** — open `docs/architecture-diagram.svg`, save as PNG.
+2. **Capture the Storage Configuration screenshot** — AWS Console → DynamoDB → table `Pulse`
+   (or the Vercel Storage tab) showing the live table.
+3. **Record the <3-min demo** following `docs/DEMO_SCRIPT.md` (use the live URL) → upload to YouTube.
+4. **Submit on Devpost** using `docs/SUBMISSION.md` — AWS DB: **Amazon DynamoDB**; Track 3;
+   live URL + repo + Vercel Team ID `team_2iIQvsPyVwDrnAX6zJ7YgSuz` are pre-filled in the checklist.

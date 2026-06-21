@@ -1,17 +1,20 @@
 # Pulse — Demo Video Script
 
-**Target length:** < 3 minutes  
-**Format:** Screen recording + voiceover  
-**Key requirement:** Show DynamoDB — name it, explain the single-table + sharding design, show the OpsReadout
+**Target length:** under 3 minutes (aim for ~2:45 spoken)
+**Format:** Screen recording + voiceover narration
+**Live URL:** https://pulse-ochre-six.vercel.app
+**Public repo:** https://github.com/SebAustin/pulse
 
 ---
 
-## Setup Before Recording
+## Recording Setup (do this before you hit record)
 
-1. Have two browser windows open: one for the host console, one in a private/incognito window for the audience.
-2. DDB Local is running (`npm run ddb:up`) or the Vercel production deployment is ready.
-3. On a separate device (phone or second monitor), open a third browser for a more compelling "second screen" demo.
-4. The seed event is either pre-created or you will create one live.
+Open two windows side by side — or use a split-screen capture:
+
+- **Left window (wide):** Desktop browser at https://pulse-ochre-six.vercel.app — this is the host console.
+- **Right window (narrow, ~375px):** Phone browser or a narrow incognito window at the same URL — this is the audience surface.
+
+Tip: resize the audience window to phone width before recording. The side-by-side view makes the "two screens, one atomic transaction" story land visually. Zoom in enough that text is legible at 1080p.
 
 ---
 
@@ -19,110 +22,118 @@
 
 ---
 
-### [0:00 – 0:25] — The Problem
+### [0:00 – 0:18] HOOK — The Problem
 
-**Screen:** Landing page at `localhost:3000` (or production URL)
+**Screen:** Landing page at https://pulse-ochre-six.vercel.app
 
-**Voiceover:**
-
-> "Live events are one-way. The speaker on stage — or on stream — has no idea if the audience is engaged, confused, or already on Twitter. Existing tools make the audience create an account, or give you results ten seconds after the moment has passed. Pulse fixes that."
-
-> "I built Pulse for Track 3 of the Hack the Zero Stack hackathon: real-time audience engagement that scales to a million concurrent participants. The secret is the database — Amazon DynamoDB — and I want to show you exactly how."
+**Say:**
+> "Live events are one-way. The speaker on stage — or on stream — has no idea if the audience is following, bored, or already gone. Existing tools are slow to set up, require audience accounts, and give you results ten seconds after the moment has passed. Pulse fixes that — and the database is the whole story."
 
 ---
 
-### [0:25 – 0:55] — Host Creates an Event / Audience Joins
+### [0:18 – 0:38] WHO IT'S FOR + TRACK 3 SETUP
 
-**Action:** On the host browser, type an event title and click "Create event."
+**Screen:** Keep the landing page visible. No clicks yet.
 
-**Voiceover:**
-
-> "The host creates an event — just a title, nothing else. They get a 6-character join code and a host console URL."
-
-**Show:** The host console loads. Point to the join code displayed prominently.
-
-**Action:** Switch to the incognito/phone browser, navigate to `/join/<code>`, enter a display name, and join.
-
-**Voiceover:**
-
-> "The audience joins in seconds — display name only. No account, no friction. The join writes a participant record to DynamoDB and resolves the code via GSI1 — a global secondary index keyed on the join code."
-
-**Show:** Back on the host console, the participant count increments live.
+**Say:**
+> "Pulse is built for streamers, teachers, conference speakers, and event organizers — anyone running a live session with a remote or in-person audience. I built it for Track 3 of the Hack the Zero Stack hackathon: real-time audience engagement that scales to a million concurrent participants. The secret is Amazon DynamoDB, and I want to show you exactly how."
 
 ---
 
-### [1:00 – 1:40] — Live Poll: The Database is the Show
+### [0:38 – 1:05] BEAT 1 — Host Creates an Event, Audience Joins
 
-**Action:** On the host console, click "Poll," fill in a question with 3–4 options, and click "Launch poll."
+**Action:** Type an event title in the landing page field ("Hackathon Live Q&A") and click **Create event**.
 
-**Voiceover:**
+**Screen:** Host console loads. The 6-character join code is prominent.
 
-> "Now I'll launch a poll. On the audience screen, three tap targets appear instantly via Server-Sent Events."
+**Say:**
+> "The host creates an event in seconds — just a title. They get a host console and a 6-character join code to share on-screen or in chat."
 
-**Action:** On the audience/phone browser, tap an answer option.
+**Action:** Switch to the narrow/phone window. Navigate to the join page, type a display name, tap **Join**.
 
-**Voiceover:**
+**Say:**
+> "The audience joins with a display name only — no account, no email, zero friction. The join writes a participant record to DynamoDB and resolves the code via GSI1, a global secondary index keyed on the join code."
 
-> "When the audience votes, one DynamoDB operation handles everything: a single `TransactWriteItems` call writes a conditional dedup record — so they can never vote twice — AND increments a sharded counter. This is one atomic guarantee. The vote and the tally can never diverge."
+**Screen:** Switch back to the host console. The participant count increments live.
 
-**Show:** The tally bar on the host console updates (< 2 s after the vote).
-
-**Action:** Point to (or zoom in on) the **OpsReadout** panel in the left rail.
-
-**Voiceover:**
-
-> "This is the OpsReadout — a judge-facing live ops panel. It shows writes per second, participant count, SSE subscriber count, and these 10 dots: the write-sharded counter shards. Every poll option is split across at least 10 DynamoDB items. A 5,000 write-per-second burst is distributed to ~500 writes per shard — well below DynamoDB's per-partition ceiling. I load-tested this: 5,000 concurrent writes, zero lost votes, zero throttling errors."
+**Say:**
+> "Back on the host console — participant count updates live."
 
 ---
 
-### [1:40 – 2:05] — No-Double-Vote Guarantee
+### [1:05 – 1:45] BEAT 2 — Live Poll, Real-Time Tally, the LIVE OPS Panel
 
-**Action:** On the audience browser, try to vote a second time on the same poll (click a different option).
+**Action:** On the host console, click **Poll**, type a question ("Best database for hackathons?"), add three options, click **Launch poll**.
 
-**Voiceover:**
+**Say:**
+> "I'll launch a poll. On the audience screen, tap targets appear immediately via Server-Sent Events."
 
-> "The audience tries to vote again. The server returns 409 — duplicate. Look at the tally: it didn't change. The count stays exactly right because the dedup Put inside the transaction failed, so the counter Add never ran. This is a database guarantee, not application logic."
+**Action:** In the phone window, tap an answer.
 
-**Show:** The "You've already voted" message on the audience screen. The tally unchanged on the host console.
+**Screen:** The tally bar on the host console updates within about 1 second.
 
----
+**Say:**
+> "When the audience votes, one DynamoDB operation handles everything: a single TransactWriteItems call — one atomic round trip. It simultaneously writes a conditional dedup record that prevents revoting, and increments a sharded counter. The tally updates in under two seconds. That's a database guarantee, not application logic."
 
-### [2:05 – 2:35] — Architecture in 30 Seconds
+**Action:** Zoom in on — or point to — the LIVE OPS panel in the host console. Reference the screenshot at docs/demo/02-host-console.png which shows 14 votes and the panel.
 
-**Screen:** Show the ARCHITECTURE.md diagram (open in a browser or share screen)
-
-**Voiceover:**
-
-> "Here's the architecture. Browsers talk to Next.js Route Handlers on Vercel — those handlers validate all input with Zod and authorize host actions. They never expose DynamoDB to the client. Production credentials come from Vercel OIDC — `AssumeRoleWithWebIdentity` — zero stored AWS keys anywhere."
-
-> "The single DynamoDB table has two GSIs: GSI1 resolves join codes to events, GSI2 powers the leaderboard with a top-N query — descending, limit N, no table scan. DynamoDB Streams are already enabled on the table. The Lambda to API Gateway WebSocket fan-out is documented and ready to wire — that's the million-scale path."
+**Say:**
+> "This is the LIVE OPS panel — writes per second, participant count, SSE subscriber count, and these ten dots: write-sharded counter shards. Every poll option is spread across at least ten DynamoDB items. A 5,000 write-per-second burst distributes to roughly 500 writes per shard — well below DynamoDB's per-partition ceiling. I load-tested this: 5,000 concurrent writes, zero lost votes, zero throttling errors. I made the database's work visible on purpose."
 
 ---
 
-### [2:35 – 3:00] — Scale Story and Close
+### [1:45 – 2:05] BEAT 3 — The No-Double-Vote Guarantee
 
-**Screen:** Return to the host console
+**Action:** In the phone window, try to vote a second time (tap a different option).
 
-**Voiceover:**
+**Screen:** "You've already voted" message on the audience screen. The tally on the host console is unchanged.
 
-> "Pulse is Track 3. The design choices — single-table, write-sharded counters, atomic transactions, OIDC credentials — come from the scale requirement, not the other way around. The OpsReadout makes that visible to anyone watching."
+**Say:**
+> "The audience tries to vote again. The server returns 409 — duplicate. Look at the tally: unchanged. The dedup Put inside the transaction failed the attribute_not_exists condition, so the counter Add never ran. One atomic operation, two guarantees. You cannot have a vote without the tally, and you cannot have the tally without the vote."
 
-> "One table. Two GSIs. One atomic transaction per vote. 5,000 writes per second, zero lost. That's Pulse."
+---
 
-**Action:** Click "End event" on the host console. The analytics summary page loads.
+### [2:05 – 2:30] BEAT 4 — Architecture: Why DynamoDB, Why It Scales
 
-**Voiceover:**
+**Screen:** Stay on the host console, or briefly show docs/architecture-diagram.svg in the browser.
 
-> "The host gets a summary: participants, total interactions, peak concurrent, top words. All sourced from durable DynamoDB items — nothing TTL-expired — stable for the judging window."
+**Say:**
+> "Here is the architecture. One DynamoDB table — table name 'Pulse' — with composite pk/sk keys, two GSIs, on-demand billing, TTL per item type, and Streams enabled. GSI1 resolves join codes in O(1). GSI2 powers the trivia leaderboard with a top-N query — descending, limit N — no table scan anywhere in the codebase."
 
-**End screen:** Show the Pulse landing page with the product name.
+> "Credentials come from Vercel OIDC — AssumeRoleWithWebIdentity — zero stored AWS keys. DynamoDB Streams are already enabled on the table. The Lambda to API Gateway WebSocket fan-out is documented and ready to wire. That is the documented path to a million concurrent viewers."
+
+---
+
+### [2:30 – 2:45] CLOSE — Deployed and Shippable Today
+
+**Screen:** Return to the host console live view at https://pulse-ochre-six.vercel.app
+
+**Say:**
+> "One table. Two GSIs. One atomic transaction per vote. 5,000 writes per second, zero lost. Deployed right now at pulse-ochre-six.vercel.app — fully shippable today."
+
+> "That's Pulse: real-time audience engagement where the database is the show."
+
+**Action:** Hold on the host console with the LIVE OPS panel visible as the final frame.
 
 ---
 
 ## Recording Tips
 
-- Use 1280 × 800 or 1920 × 1080. Keep font sizes large enough to read.
-- Record the OpsReadout shard-dot animation during the voting segment — it's the visual centerpiece.
-- If live DDB latency is < 1 s, let it speak for itself without rushing past it.
-- The audience-joins-on-phone shot is high-impact — use a phone or a narrow browser window to simulate it.
-- Caption the DynamoDB technical terms (TransactWriteItems, write sharding, GSI) on screen if possible — judges may not watch with audio.
+- Record at 1280 x 800 or 1920 x 1080. Keep font sizes large enough to read in a compressed video.
+- The most important visual: the LIVE OPS shard-dot animation updating in real time during the voting beat. Slow down and let it breathe — do not rush past it.
+- Caption the DynamoDB technical terms on-screen (TransactWriteItems, write sharding, GSI1, GSI2) if your editor supports lower-thirds. Judges may watch without audio.
+- If you record the phone window as a real device via screen-mirroring, it reads as more authentic than a resized browser.
+- If the live demo misbehaves: close the poll, create a new event, and restart from Beat 1 — the landing page and join flow take about 20 seconds.
+
+---
+
+## Fallback (if something fails live)
+
+If the poll tally does not update in real time during recording:
+
+1. Check that both windows are on the same event (same 6-char code).
+2. Reload the audience window and re-vote.
+3. If SSE drops, the client falls back to HTTP polling (< 5 s). Wait one extra tick.
+4. The LIVE OPS panel shows SSE subscriber count — if it reads 0, refresh the host console.
+
+The underlying DynamoDB writes succeed even when the SSE stream is delayed. The tally will appear when the next poll tick fires.

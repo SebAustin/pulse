@@ -6,6 +6,18 @@ Built for the _H0: Hack the Zero Stack with Vercel, v0 and AWS Databases_ hackat
 
 Score: **92 / 100** · Tests: **137 unit + 24 integration + 3 E2E** · Load test: **5 000 writes, 0 lost** · p95 latency: **~1.3 s** (gate is < 2 s)
 
+## 🔴 Live demo
+
+**[pulse-ochre-six.vercel.app](https://pulse-ochre-six.vercel.app)** — deployed on Vercel, backed by Amazon DynamoDB (us-east-1) via Vercel OIDC (no stored keys). Open it, create an event, and join from your phone with the code.
+
+![Pulse host console — live poll with write-sharded DynamoDB counters](docs/demo/02-host-console.png)
+<sub>Host control room: a live poll tallying in real time, with the **LIVE OPS** panel exposing the DynamoDB write-sharding (10 shards) and participant/SSE counts — the database, made visible.</sub>
+
+| | |
+|---|---|
+| Audience (mobile) — vote | Audience (mobile) — live results |
+| ![join + vote](docs/demo/03-audience-vote.png) | ![live results](docs/demo/04-audience-results.png) |
+
 ---
 
 ## What Pulse Does
