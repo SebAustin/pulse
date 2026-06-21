@@ -203,3 +203,43 @@ amazon-dynamodb, aws, vercel, next.js, react, typescript, node.js, tailwind-css,
 | Validation / utils | Zod, nanoid |
 | Testing / CI | Vitest, Playwright, GitHub Actions, Docker (DynamoDB Local) |
 | Optional AI | OpenAI API (behind a feature flag) |
+
+---
+
+## YouTube (demo video metadata)
+
+**Title:** Pulse — Real-Time Audience Engagement at Scale on Amazon DynamoDB + Vercel | H0 Hackathon
+
+**Description:**
+
+```
+Pulse turns any audience into the show — live polls, word clouds, emoji reactions, and trivia that update in real time and scale to millions. Built on Amazon DynamoDB + Vercel for the H0: Hack the Zero Stack hackathon (Track 3 — million-scale).
+
+▶ Try it live:  https://pulse-ochre-six.vercel.app
+⌨ Source code:  https://github.com/SebAustin/pulse
+
+— What makes it different —
+The database is the hero. Every interaction is one atomic Amazon DynamoDB transaction, so you literally cannot double-vote and the tally is always correct. Vote counters are write-sharded (10+ shards) to absorb a viral burst without throttling, and the host console's LIVE OPS panel shows that write-sharding happening in real time — the backend, made visible.
+
+— How it works —
+• A host creates an event and shares a 6-character code
+• The audience joins anonymously from any phone — no app, no account
+• Polls, word clouds, emoji reactions, and a trivia leaderboard update on every screen in ~1–2s (Server-Sent Events)
+• Production talks to AWS via Vercel OIDC — no stored credentials
+
+— Built with —
+Next.js 16 (App Router) · React · TypeScript · Amazon DynamoDB (single-table, GSIs, Streams, TTL) · Vercel · AWS CDK · Server-Sent Events
+
+— Chapters —
+0:00  What is Pulse?
+0:09  Live poll — real-time tally + LIVE OPS (DynamoDB write-sharding)
+0:24  Join from any phone with a code
+0:34  You can't double-vote — one atomic DynamoDB transaction
+0:46  Four live moments: polls, word clouds, emoji, trivia
+0:57  Architecture: Vercel → DynamoDB, OIDC, built to scale
+1:11  Try it live
+
+Created for the H0: Hack the Zero Stack with Vercel, v0 and AWS Databases hackathon.
+
+#H0Hackathon #AWS #DynamoDB #Vercel #NextJS #Serverless #Hackathon
+```
