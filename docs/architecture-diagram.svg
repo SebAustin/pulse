@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 760" font-family="'Segoe UI',Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+    </marker>
+    <style>
+      .lbl{fill:#0f172a;font-size:13px;font-weight:600}
+      .sub{fill:#475569;font-size:11px}
+      .grp{fill:#1e293b;font-size:13px;font-weight:700;letter-spacing:.5px}
+      .edge{stroke:#475569;stroke-width:1.6;fill:none}
+      .edged{stroke:#94a3b8;stroke-width:1.4;fill:none;stroke-dasharray:5 4}
+      .elbl{fill:#334155;font-size:10.5px}
+      .box{rx:10;stroke-width:1.5}
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1060" height="760" fill="#f8fafc"/>
+  <text x="530" y="36" text-anchor="middle" fill="#0f172a" font-size="22" font-weight="800">Pulse — Real-Time Audience Engagement</text>
+  <text x="530" y="58" text-anchor="middle" class="sub" font-size="13">Vercel (Next.js 16) · Amazon DynamoDB single-table · Track 3 — million-scale</text>
+
+  <!-- CLIENT LAYER -->
+  <text x="40" y="98" class="grp">CLIENTS</text>
+  <rect class="box" x="40" y="108" width="240" height="78" fill="#eef2ff" stroke="#6366f1"/>
+  <text x="60" y="134" class="lbl">Host Console</text>
+  <text x="60" y="152" class="sub">Browser · dark control room</text>
+  <text x="60" y="168" class="sub">create event · launch moments · live ops</text>
+
+  <rect class="box" x="300" y="108" width="240" height="78" fill="#fff1f2" stroke="#f43f5e"/>
+  <text x="320" y="134" class="lbl">Audience (mobile PWA)</text>
+  <text x="320" y="152" class="sub">join by 6-char code · vote / react</text>
+  <text x="320" y="168" class="sub">EventSource (SSE) + polling fallback</text>
+
+  <!-- VERCEL LAYER -->
+  <rect x="24" y="216" width="700" height="250" rx="14" fill="#ffffff" stroke="#0f172a" stroke-dasharray="7 5"/>
+  <text x="44" y="240" class="grp">▲ VERCEL — Next.js 16 App Router (Node.js runtime)</text>
+
+  <rect class="box" x="44" y="256" width="200" height="74" fill="#f1f5f9" stroke="#0ea5e9"/>
+  <text x="60" y="280" class="lbl">Edge Middleware</text>
+  <text x="60" y="298" class="sub">host capability-URL →</text>
+  <text x="60" y="313" class="sub">httpOnly cookie redemption</text>
+
+  <rect class="box" x="262" y="256" width="210" height="74" fill="#f1f5f9" stroke="#0ea5e9"/>
+  <text x="278" y="280" class="lbl">Route Handlers (/api/*)</text>
+  <text x="278" y="298" class="sub">zod-validated · host-token /</text>
+  <text x="278" y="313" class="sub">participant cookie auth</text>
+
+  <rect class="box" x="490" y="256" width="214" height="74" fill="#f1f5f9" stroke="#0ea5e9"/>
+  <text x="506" y="280" class="lbl">SSE stream + Server</text>
+  <text x="506" y="298" class="sub">Components — aggregated</text>
+  <text x="506" y="313" class="sub">snapshots ~1s (micro-cached)</text>
+
+  <rect class="box" x="44" y="352" width="660" height="94" fill="#ecfeff" stroke="#06b6d4"/>
+  <text x="60" y="376" class="lbl">lib/dynamo — single-table repository (DynamoDBDocumentClient singleton)</text>
+  <text x="60" y="397" class="sub">• vote = TransactWriteItems: conditional dedup Put (attribute_not_exists) + sharded counter ADD — one atomic guarantee</text>
+  <text x="60" y="414" class="sub">• write-sharded counters (≥10 shards/option) defeat hot-partition under viral single-event load</text>
+  <text x="60" y="431" class="sub">• reads: aggregate shards · GSI Query for leaderboard (no Scan) · presence + ops counters</text>
+
+  <!-- AWS LAYER -->
+  <rect x="760" y="216" width="276" height="430" rx="14" fill="#ffffff" stroke="#ff9900" stroke-dasharray="7 5"/>
+  <text x="780" y="240" class="grp" fill="#9a3412">AWS</text>
+
+  <rect class="box" x="780" y="256" width="236" height="70" fill="#fff7ed" stroke="#ff9900"/>
+  <text x="796" y="280" class="lbl">IAM Role</text>
+  <text x="796" y="298" class="sub">AssumeRoleWithWebIdentity</text>
+  <text x="796" y="313" class="sub">least-privilege · NO stored keys</text>
+
+  <rect class="box" x="780" y="344" width="236" height="180" fill="#fff7ed" stroke="#ff9900"/>
+  <text x="796" y="368" class="lbl">Amazon DynamoDB</text>
+  <text x="796" y="386" class="sub">Table "Pulse" · pk / sk</text>
+  <text x="796" y="404" class="sub">on-demand billing</text>
+  <text x="810" y="424" class="sub">• GSI1 — code → event</text>
+  <text x="810" y="441" class="sub">• GSI2 — eventId / score (top-N)</text>
+  <text x="810" y="458" class="sub">• TTL — ephemeral reactions/presence</text>
+  <text x="810" y="475" class="sub">• Streams — NEW_AND_OLD_IMAGES</text>
+  <text x="796" y="500" class="sub">EVENT · POLL · VOTE · COUNTER·n</text>
+  <text x="796" y="515" class="sub">REACTION · WORD · LB · USER · CONN</text>
+
+  <!-- SCALE-OUT (documented, not MVP) -->
+  <rect x="760" y="560" width="276" height="86" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="5 4"/>
+  <text x="774" y="582" class="sub" font-weight="700" fill="#64748b">DOCUMENTED SCALE-OUT (not in MVP)</text>
+  <text x="774" y="601" class="sub">Streams → Lambda → API Gateway</text>
+  <text x="774" y="617" class="sub">WebSocket fan-out + edge caching</text>
+  <text x="774" y="633" class="sub">→ millions of concurrent subscribers</text>
+
+  <!-- EDGES client -> vercel -->
+  <path class="edge" d="M160,186 L160,256" marker-end="url(#arrow)"/>
+  <text x="168" y="226" class="elbl">magic link</text>
+  <path class="edge" d="M420,186 L367,256" marker-end="url(#arrow)"/>
+  <text x="396" y="226" class="elbl">HTTPS / SSE</text>
+
+  <!-- internal vercel edges -->
+  <path class="edge" d="M144,330 L144,352" marker-end="url(#arrow)"/>
+  <path class="edge" d="M367,330 L367,352" marker-end="url(#arrow)"/>
+  <path class="edge" d="M597,330 L520,352" marker-end="url(#arrow)"/>
+
+  <!-- vercel -> aws : OIDC -->
+  <path class="edge" d="M704,291 L780,291" marker-end="url(#arrow)"/>
+  <text x="712" y="284" class="elbl">Vercel OIDC token</text>
+  <!-- repository -> dynamodb -->
+  <path class="edge" d="M704,400 L740,400 L740,420 L780,420" marker-end="url(#arrow)"/>
+  <text x="712" y="394" class="elbl">SDK v3</text>
+
+  <!-- dynamodb -> scale-out -->
+  <path class="edged" d="M898,524 L898,560" marker-end="url(#arrowDash)"/>
+
+  <text x="40" y="690" class="sub">Security: prod creds via Vercel OIDC (no stored keys) · httpOnly cookie auth (host + participant) · zod at all boundaries · CSP + HSTS</text>
+  <text x="40" y="710" class="sub">Verified: 137 unit + 24 integration + 3 E2E · 5,000-write load test, 0 lost · live tally p95 ~1.3s (&lt; 2s)</text>
+</svg>
