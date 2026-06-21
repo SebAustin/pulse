@@ -34,7 +34,7 @@ This plan turns the approved requirements into a buildable design. Every section
 | **`lib/dynamo` repository layer** | The only code that talks to DynamoDB. Encapsulates keys, transactions, sharded counters, presence items, GSI queries. | Trusted server |
 | **DynamoDB table `Pulse`** | Single source of truth: events, codes, moments, votes, counters, reactions, words, participants, leaderboard, presence. | Trusted data store |
 | **DynamoDB Local (dev only)** | Drop-in DynamoDB for offline development and load testing. | Local |
-| **Anthropic API (stretch)** | Poll-question suggestions + word-cloud sentiment. Optional, key-gated. | External, optional |
+| **OpenAI API (stretch)** | Poll-question suggestions + word-cloud sentiment. Optional, key-gated. | External, optional |
 
 ### 1.2 Trust boundaries (the important one)
 
@@ -68,7 +68,7 @@ flowchart TB
     WS["API GW WebSocket<br/>(documented, not built)"]
   end
 
-  ANT["Anthropic API<br/>(stretch, key-gated)"]
+  ANT["OpenAI API<br/>(stretch, key-gated)"]
 
   AUD -->|"POST vote / reaction / word"| RH_MUT
   HOST -->|"create / launch / close (host token)"| RH_MUT
@@ -172,7 +172,7 @@ pulse/
 │   │   ├── scoring.ts                 # server-authoritative trivia points (A-23)
 │   │   └── wordcloud.ts               # normalise + aggregate (A-24)
 │   ├── ai/
-│   │   └── anthropic.ts               # key-gated client + graceful degrade (A-25,A-26)
+│   │   └── openai.ts               # key-gated client + graceful degrade (A-25,A-26)
 │   ├── config.ts                      # SHARD_COUNT, EMOJI_PALETTE, intervals, TTL windows, limits
 │   └── observability/log.ts           # structured logging (NFR-05)
 │
@@ -548,8 +548,8 @@ REACTION_TTL_SEC=600                  # ephemeral reaction replay window
 JUDGING_WINDOW_DAYS=30                # durable-item retention floor (TTL policy 3.6)
 
 # --- Stretch (optional; feature hidden if absent — A-26) ---
-ANTHROPIC_API_KEY=                    # leave blank to disable AI features
-ANTHROPIC_MODEL=claude-sonnet-4-5
+OPENAI_API_KEY=                    # leave blank to disable AI features
+OPENAI_MODEL=gpt-4o-mini
 ```
 
 `.env.local` and any real-secret file are in `.gitignore`; no credential value is ever committed (SC8).
@@ -679,7 +679,7 @@ Each milestone is independently demoable. The thinnest runnable slice is M1.
 - **Exit**: SC5, SC8, SC9, SC10 pass. Lighthouse/CWV check on join + host pages.
 
 ### M7 — Stretch: AI assist (gated; only after SC1–SC9 green) — F-05
-- `lib/ai/anthropic.ts` key-gated; `POST /api/ai/poll-suggestions`, `POST /api/ai/sentiment`; UI hidden when no key (A-26).
+- `lib/ai/openai.ts` key-gated; `POST /api/ai/poll-suggestions`, `POST /api/ai/sentiment`; UI hidden when no key (A-26).
 - **Exit**: features work with key, gracefully hidden without (F-05.3).
 
 ---
@@ -702,7 +702,7 @@ Each milestone is independently demoable. The thinnest runnable slice is M1.
 | Billing | **On-demand (PAY_PER_REQUEST)** | Provisioned capacity | No capacity planning, bursts without pre-warm, no accidental spend (NFR-01.3, A-02). |
 | Validation | **zod** at every boundary | Hand-rolled checks; trust client | Schema-based, single source for request+response types, fail-fast (NFR-03.6). |
 | Test stack | **Vitest** (+ DDB Local integration) + **Playwright** E2E | Jest + Cypress | TS-native, fast, App-Router compatible; Playwright required by standards (A-27). |
-| AI (stretch) | **Anthropic Claude**, key-gated | Always-on; other providers | Sponsor alignment (A-25); graceful degrade hides feature without key (A-26, F-05.3). |
+| AI (stretch) | **OpenAI**, key-gated | Always-on; other providers | Sponsor alignment (A-25); graceful degrade hides feature without key (A-26, F-05.3). |
 
 ---
 

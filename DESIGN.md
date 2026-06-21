@@ -565,7 +565,7 @@ Cards: `--color-surface-raised`, `--radius-md`. Number at `--text-3xl`, label at
 
 **Moment breakdown:** Accordion list. Each moment closed by default. On expand: shows the relevant result (poll bars, word cloud top-5 list, emoji counts, final leaderboard).
 
-**AI Assist block (stretch, gated by `ANTHROPIC_API_KEY`):** Below the accordion, a panel with heading "AI Summary" and body text (generated sentiment summary of word cloud submissions). If key is absent, this section is omitted entirely — no placeholder, no error.
+**AI Assist block (stretch, gated by `OPENAI_API_KEY`):** Below the accordion, a panel with heading "AI Summary" and body text (generated sentiment summary of word cloud submissions). If key is absent, this section is omitted entirely — no placeholder, no error.
 
 ---
 

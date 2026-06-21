@@ -1,7 +1,7 @@
 /**
  * POST /api/ai/poll-suggestions — Suggest poll questions (host-gated, stretch).
  *
- * Returns 503 when ANTHROPIC_API_KEY is absent (F-05.3).
+ * Returns 503 when OPENAI_API_KEY is absent (F-05.3).
  * F-05.1.
  */
 
@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
 import { PollSuggestionsSchema, okResponse, errorResponse } from "@/lib/validation/schemas";
 import { verifyToken } from "@/lib/auth/hostToken";
 import { getEventById } from "@/lib/dynamo/repository";
-import { suggestPollQuestions, isAiEnabled } from "@/lib/ai/anthropic";
+import { suggestPollQuestions, isAiEnabled } from "@/lib/ai/openai";
 import { log } from "@/lib/observability/log";
 
 export async function POST(req: Request): Promise<NextResponse> {

@@ -111,9 +111,9 @@ Each moment type is launched by the host from the control console and becomes im
 
 | ID | Requirement |
 |----|-------------|
-| F-05.1 | Host can enter a topic and receive 2–3 suggested poll questions generated via the Anthropic Claude API. |
+| F-05.1 | Host can enter a topic and receive 2–3 suggested poll questions generated via the OpenAI API. |
 | F-05.2 | Post-event summary page optionally includes an AI-generated sentiment summary of word-cloud submissions for that session. |
-| F-05.3 | AI features degrade gracefully (feature hidden) when the Anthropic API key is absent or the API returns an error. |
+| F-05.3 | AI features degrade gracefully (feature hidden) when the OpenAI API key is absent or the API returns an error. |
 
 ---
 

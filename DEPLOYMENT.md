@@ -167,7 +167,7 @@ In the Vercel dashboard, go to your project > **Settings** > **Environment Varia
 | `AWS_REGION` | `us-east-1` | Must match CDK stack region |
 | `AWS_ROLE_ARN` | `arn:aws:iam::<account>:role/PulseVercelRole` | Output of `deploy:init-aws` |
 | `PULSE_SESSION_SECRET` | 32+ byte random value | **Required in production.** Generate: `openssl rand -base64 32` |
-| `ANTHROPIC_API_KEY` | `sk-ant-...` | Optional: enables AI assist features |
+| `OPENAI_API_KEY` | `sk-...` | Optional: enables AI assist features |
 | `SSE_INTERVAL_MS` | `1000` | Optional: default 1000ms |
 | `SSE_CACHE_TTL_MS` | `500` | Optional: default 500ms |
 | `JUDGING_WINDOW_DAYS` | `30` | Optional: TTL for durable items |
@@ -314,7 +314,7 @@ OPS_WINDOW_SEC=5
 SHARD_COUNT=10
 
 # Optional — AI assist (feature hides itself when absent)
-ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
 ```
 
 Local development uses `PULSE_DB_MODE=local` and connects to DynamoDB Local via Docker:

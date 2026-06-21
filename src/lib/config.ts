@@ -54,9 +54,9 @@ export const config = {
   RATE_LIMIT_WINDOW_MS: 60_000, // 1 minute
   RATE_LIMIT_MAX_REQUESTS: 120,  // 2 per second average
 
-  // Anthropic
-  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? "",
-  ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5",
+  // OpenAI (optional AI assist — gated; feature hides itself when key absent)
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",
+  OPENAI_MODEL: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
 
   /**
    * Secret used to HMAC-sign participant cookies (F-02 / SC-identity).

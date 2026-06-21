@@ -70,7 +70,7 @@ no stored keys**; least-privilege IAM scoped to the one table + its GSIs.
 ## Deferred (documented, not built — intentional MVP scope)
 
 - DynamoDB Streams → Lambda → API Gateway WebSocket fan-out (the true million-subscriber read path).
-- Optional AI assist (Claude): poll suggestions + post-event sentiment summary (gated behind env).
+- Optional AI assist (OpenAI): poll suggestions + post-event sentiment summary (gated behind env).
 - Cognito/account-based identity (current model is anonymous-by-design; Sybil resistance is a non-goal).
 
 ## Next (recommended polish — non-blocking; from final review)

@@ -37,7 +37,7 @@
 │       ├── WordCloud top-5 list
 │       ├── EmojiCounts
 │       └── FinalLeaderboard
-└── AIAssistPanel (gated by ANTHROPIC_API_KEY)
+└── AIAssistPanel (gated by OPENAI_API_KEY)
 
 /join
 └── JoinScreen

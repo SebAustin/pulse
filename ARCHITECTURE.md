@@ -35,7 +35,7 @@ flowchart TB
     WS["API GW WebSocket\ndocumented not built"]
   end
 
-  ANT["Anthropic API\nstretch feature\nhidden without ANTHROPIC_API_KEY"]
+  ANT["OpenAI API\nstretch feature\nhidden without OPENAI_API_KEY"]
 
   HOST -->|"first visit /host/id/token"| MW
   MW -->|"307 + httpOnly cookie"| HOST

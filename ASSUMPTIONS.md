@@ -68,8 +68,8 @@
 
 | ID | Assumption | Rationale | How to Override |
 |----|------------|-----------|-----------------|
-| A-25 | The Anthropic Claude API (claude-sonnet-4-5 or latest available) is used for AI assist features. | Consistent with the hackathon's Anthropic sponsorship and the developer's existing model access. | Change the model ID in the AI service module; the API call signature is model-agnostic. |
-| A-26 | AI assist features are rendered only when `ANTHROPIC_API_KEY` is present in the environment; otherwise the UI element is hidden entirely. | Graceful degradation with no runtime errors. | Make the feature always visible but show a "not configured" state when the key is absent. |
+| A-25 | The OpenAI API (gpt-4o-mini or latest available) is used for AI assist features. | Consistent with the hackathon's OpenAI sponsorship and the developer's existing model access. | Change the model ID in the AI service module; the API call signature is model-agnostic. |
+| A-26 | AI assist features are rendered only when `OPENAI_API_KEY` is present in the environment; otherwise the UI element is hidden entirely. | Graceful degradation with no runtime errors. | Make the feature always visible but show a "not configured" state when the key is absent. |
 
 ---
 

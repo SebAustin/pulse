@@ -39,7 +39,7 @@ AWS_REGION=us-east-1
 DYNAMODB_LOCAL_ENDPOINT=http://localhost:8000
 ```
 
-All other variables have sensible defaults. `ANTHROPIC_API_KEY` is optional — AI features are hidden when absent.
+All other variables have sensible defaults. `OPENAI_API_KEY` is optional — AI features are hidden when absent.
 
 ### Stop DynamoDB Local
 
@@ -128,7 +128,7 @@ npm run cdk:synth
 | `OPS_WRITES_TTL_SEC` | `60` | TTL for OPS#WRITES buckets |
 | `REACTION_TTL_SEC` | `600` | TTL for ephemeral REACTION# items |
 | `JUDGING_WINDOW_DAYS` | `30` | Minimum retention for durable items |
-| `ANTHROPIC_API_KEY` | (empty) | Enables AI assist features when set |
+| `OPENAI_API_KEY` | (empty) | Enables AI assist features when set |
 
 `VERCEL_OIDC_TOKEN` is injected automatically by Vercel at runtime — do not set it manually.
 
