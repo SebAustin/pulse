@@ -1,5 +1,7 @@
 # Pulse
 
+![Pulse — real-time audience engagement on Amazon DynamoDB + Vercel](docs/demo/thumbnail.png)
+
 **Real-time audience engagement for live events — polls, word clouds, emoji reactions, trivia leaderboards.**
 
 Built for the _H0: Hack the Zero Stack with Vercel, v0 and AWS Databases_ hackathon (Track 3 — million-scale). The database is the hero: a DynamoDB single-table design with write-sharded atomic counters sits at the center of every feature.

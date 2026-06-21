@@ -153,6 +153,7 @@ All real values are filled in. Items marked [ACTION NEEDED] require a screenshot
 | Vercel Team ID | team_2iIQvsPyVwDrnAX6zJ7YgSuz | Confirmed |
 | Track | Track 3 — Million-scale global app | Entered on Devpost form |
 | AWS Database used | Amazon DynamoDB | Named in submission text above |
+| Project thumbnail | docs/demo/thumbnail.png (2400×1600, 3:2, 1.2 MB) | Ready to upload |
 | Architecture diagram | docs/architecture-diagram.svg — export to PNG before uploading | [ACTION NEEDED] Open the SVG in a browser and export or screenshot as PNG |
 | Storage Configuration screenshot | Screenshot from AWS Console: DynamoDB → Tables → Pulse → Overview tab (shows table name, billing mode On-demand, pk/sk) + Indexes tab (shows GSI1 and GSI2) | [ACTION NEEDED] Capture two screenshots or one screenshot showing both tabs |
 | Demo video URL | [paste after upload to YouTube or Loom] | [ACTION NEEDED] Record using docs/DEMO_SCRIPT.md, upload, paste URL here and on Devpost |

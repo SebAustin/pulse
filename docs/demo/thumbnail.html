@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#070710; --violet:#8b5cff; --violet2:#b89bff; --lime:#aef74f; --coral:#ff6a45;
+    --ink:#f4f3ff; --muted:#9a98b8; --card:#0f1020; --line:#26263c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1200px;height:800px;overflow:hidden}
+  body{
+    background:
+      radial-gradient(900px 600px at 12% 8%, rgba(139,92,255,.30), transparent 60%),
+      radial-gradient(700px 520px at 92% 96%, rgba(255,106,69,.16), transparent 60%),
+      var(--bg);
+    color:var(--ink); font-family:"Inter",system-ui,sans-serif; position:relative;
+  }
+  /* dotted grid texture */
+  body::before{content:"";position:absolute;inset:0;
+    background-image:radial-gradient(rgba(255,255,255,.05) 1.1px, transparent 1.1px);
+    background-size:26px 26px; mask:linear-gradient(120deg,#000,transparent 75%);}
+  .wrap{position:relative;height:100%;display:grid;grid-template-columns:1.18fr .82fr;gap:48px;padding:64px 64px}
+  /* LEFT */
+  .left{display:flex;flex-direction:column;justify-content:center;gap:26px}
+  .live{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;
+    padding:8px 16px;border:1px solid rgba(174,247,79,.4);border-radius:999px;
+    background:rgba(174,247,79,.08);color:var(--lime);font-family:"JetBrains Mono",monospace;
+    font-size:14px;letter-spacing:.16em;text-transform:uppercase}
+  .live .dot{width:9px;height:9px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px var(--lime)}
+  .word{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:148px;line-height:.9;
+    letter-spacing:-.04em;background:linear-gradient(180deg,#fff,#cfc7ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .tag{font-size:30px;line-height:1.25;font-weight:600;max-width:18ch;color:#e9e7ff}
+  .tag b{color:var(--violet2)}
+  .chips{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px}
+  .chip{padding:9px 16px;border-radius:10px;font-size:16px;font-weight:600;border:1px solid var(--line)}
+  .chip.db{background:linear-gradient(135deg,#6f43ff,#9a6bff);border-color:transparent;color:#fff;box-shadow:0 8px 24px rgba(139,92,255,.4)}
+  .chip.v{color:#fff}
+  .chip.n{color:var(--muted)}
+  .mono{font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--muted);letter-spacing:.02em;margin-top:4px}
+  /* RIGHT: product card */
+  .right{display:flex;align-items:center}
+  .card{width:100%;background:linear-gradient(180deg,#121327,#0c0c18);border:1px solid var(--line);
+    border-radius:22px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+  .q{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:21px;margin-bottom:4px}
+  .meta{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;
+    font-family:"JetBrains Mono",monospace;margin-bottom:18px}
+  .bar{margin:14px 0}
+  .bar .row{display:flex;justify-content:space-between;font-size:15px;margin-bottom:7px}
+  .bar .row .pct{font-family:"JetBrains Mono",monospace;color:var(--muted)}
+  .track{height:14px;border-radius:8px;background:#1c1d33;overflow:hidden}
+  .fill{height:100%;border-radius:8px;background:linear-gradient(90deg,#6f43ff,#9a6bff)}
+  .fill.dim{background:#3a3a57}
+  .ops{display:flex;align-items:center;gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+  .ops .lbl{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;color:var(--lime);text-transform:uppercase}
+  .dots{display:flex;gap:6px}
+  .dots i{width:11px;height:11px;border-radius:3px;background:var(--violet);box-shadow:0 0 8px rgba(139,92,255,.7)}
+  .dots i:nth-child(7),.dots i:nth-child(9),.dots i:nth-child(10){background:#2a2b45;box-shadow:none}
+  .ops .w{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:13px;color:#e9e7ff}
+  .emoji{position:absolute;font-size:34px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="left">
+      <span class="live"><span class="dot"></span> Live audience engagement</span>
+      <div class="word">Pulse</div>
+      <div class="tag">Polls, reactions &amp; leaderboards that update in real time — and scale to <b>millions</b>.</div>
+      <div class="chips">
+        <span class="chip db">Amazon DynamoDB</span>
+        <span class="chip v">▲ Vercel</span>
+        <span class="chip n">Next.js 16</span>
+      </div>
+      <div class="mono">single-table · write-sharded counters · OIDC · Track 3 — million-scale</div>
+    </div>
+    <div class="right">
+      <div class="card">
+        <div class="q">Which AWS database is the hero of this stack?</div>
+        <div class="meta"><span>● LIVE</span><span>14 votes</span></div>
+        <div class="bar">
+          <div class="row"><span>DynamoDB</span><span class="pct">71%</span></div>
+          <div class="track"><div class="fill" style="width:71%"></div></div>
+        </div>
+        <div class="bar">
+          <div class="row"><span>Aurora PostgreSQL</span><span class="pct">14%</span></div>
+          <div class="track"><div class="fill dim" style="width:14%"></div></div>
+        </div>
+        <div class="bar">
+          <div class="row"><span>Aurora DSQL</span><span class="pct">14%</span></div>
+          <div class="track"><div class="fill dim" style="width:14%"></div></div>
+        </div>
+        <div class="ops">
+          <span class="lbl">Live ops</span>
+          <span class="dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          <span class="w">10 shards</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="emoji" style="top:44px;right:52px">🔥</div>
+  <div class="emoji" style="bottom:52px;left:46%">🎉</div>
+  <div class="emoji" style="top:300px;left:40%">👏</div>
+</body>
+</html>
