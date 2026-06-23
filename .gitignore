@@ -55,3 +55,6 @@ cdk.out/
 # generated CDK deploy outputs (contains account-specific ARNs)
 infra/cdk-outputs.json
 cdk-outputs.json
+
+# private Devpost upload assets (contains AWS account id) — do NOT publish
+submission-private/
